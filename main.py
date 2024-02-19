@@ -12,13 +12,23 @@ async def run(playwright: Playwright):
 
     username, password = env_variable.get('username'), env_variable.get('password')
     device: dict = dict(playwright.devices["Pixel 7"])
-    device_browser_type: str = device.pop("default_browser_type")
+    device_prop: dict = {key: value for key, value in device.items() if key not in ('has_touch', 'is_mobile', 'default_browser_type')}
 
     context = await playwright['chromium'].launch_persistent_context(
-        args=['--touch-events=enabled'],
-        user_data_dir= user_data_path, 
-        headless= False,
-        color_scheme='dark',
+        args = ['--touch-events=enabled'],
+        user_data_dir = user_data_path, 
+        headless = False,
+        color_scheme ='dark',
+        channel= "chrome",
+        **device_prop,
+
+        # user_agent= device['user_agent'], 
+        # viewport= device['viewport'], 
+        # device_scale_factor= device['device_scale_factor'], 
+        # default_browser_type= 'chrome', #'chromium'
+
+        # is_mobile= True,  # This make the bot detectable
+        # has_touch= True,  # This make the bot detectable
     )
 
         
@@ -26,7 +36,10 @@ async def run(playwright: Playwright):
     if len(context.pages) > 0: await context.pages[0].close()
 
     # CODE GOES HERE
-    await page.goto("sportybet.com/ng/virtual")
+    await page.goto("https://sportybet.com/ng/virtual")
+    input("Enter something here: ")
+
+    
     await context.close()
 
     
