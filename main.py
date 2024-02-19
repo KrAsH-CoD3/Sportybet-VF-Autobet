@@ -29,13 +29,13 @@ async def run(playwright: Playwright):
     page = await context.new_page()
     if len(context.pages) > 0: await context.pages[0].close()
 
-    # CODE GOES HERE
+    # page.set_default_navigation_timeout(30 * 1000)
+    page.set_default_timeout(30 * 1000)
     await page.goto("https://www.sportybet.com/ng/lite/login")
     await page.locator('//input[@name="username"]').fill(username)
     await page.locator('//input[@name="password"]').fill(password)
     await page.get_by_role('button', name='Log In').click()
-    # await page.locator('a.m-balance').is_visible()
-    await expect(page.locator('a.m-balance')).to_be_visible(timeout=30 * 1000)
+    await expect(page.locator('a.m-balance')).to_be_visible()
     input("Enter something here: ")
 
 
