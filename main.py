@@ -34,7 +34,11 @@ async def run(playwright: Playwright):
     await page.locator('//input[@name="password"]').fill(password)
     await page.get_by_role('button', name='Log In').click()
     await expect(page.locator('a.m-balance')).to_be_visible()
-    await page.goto("https://www.sportybet.com/ng/virtual")
+    while True:
+        try: 
+            await page.goto("https://www.sportybet.com/ng/virtual")
+            break
+        except TimeoutError: ...
     await page.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
     iframe = page.frame_locator("iframe").nth(0)
     await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=20 * 1000)
