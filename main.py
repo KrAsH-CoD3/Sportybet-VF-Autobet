@@ -21,8 +21,6 @@ async def run(playwright: Playwright):
         color_scheme ='dark',
         channel= "chrome",
         **device,
-        # is_mobile= True,  # This make the bot detectable
-        # has_touch= True,  # This make the bot detectable
     )
 
         

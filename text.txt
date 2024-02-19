@@ -2,7 +2,5 @@ https://www.sportybet.com/ng/lite/login
 https://www.sportybet.com/ng/m/virtual
 
 
-/html/body/my-app/gr-sidebar-container/div/div/div/mobile-dashboard/div/dashboard-list-layout/div/page-home/home-list-layout/gr-favourite-panel/gr-panel/div/custom-collapsable/div/div/div/gr-list/ul/custom-collapsable/div/gr-list-item[1]
-//*[@id="playlist_13104"]
+https://realnaps.com/signal/premium/ultra/sportybet-england-league.php
 
-//custom-collapsable//gr-list-item[@id="playlist_13104"]
