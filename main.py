@@ -1,9 +1,9 @@
 import asyncio, os
 from dotenv import load_dotenv
 from os import environ as env_variable
-from playwright.async_api import async_playwright, Playwright
+from playwright.async_api import async_playwright, Playwright, expect
 
-load_dotenv()
+load_dotenv(override=True)
 
 async def run(playwright: Playwright):
     profile: str = "Sportybet-VF-profile"
@@ -30,10 +30,12 @@ async def run(playwright: Playwright):
     if len(context.pages) > 0: await context.pages[0].close()
 
     # CODE GOES HERE
-    #
-    await page.goto("https://sportybet.com/ng/virtual#login")
-    await page.locator('a.m-balance').is_visible()
-    await page.goto("https://sportybet.com/ng/virtual")
+    await page.goto("https://www.sportybet.com/ng/lite/login")
+    await page.locator('//input[@name="username"]').fill(username)
+    await page.locator('//input[@name="password"]').fill(password)
+    await page.get_by_role('button', name='Log In').click()
+    # await page.locator('a.m-balance').is_visible()
+    await expect(page.locator('a.m-balance')).to_be_visible(timeout=30 * 1000)
     input("Enter something here: ")
 
 
