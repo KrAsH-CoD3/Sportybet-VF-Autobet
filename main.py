@@ -49,17 +49,28 @@ async def run(playwright: Playwright):
     await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
     # await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
     
-    async def pred_team(position):
+    async def dot_position(position):
         return await realnaps_tab.get_by_role('link', name=str(position))
 
-    print("Waiting for preditions")
-    await expect(realnaps_tab.locator('//span[@id="day"]')).not_to_be_visible(timeout=default_timeout)
+    async def pred_day():
+        return await realnaps_tab.inner_text('//span[@id="day"]')
 
-    print("Abouting clicking the 3rd prediction")
-    await asyncio.sleep(5)
-    await pred_team(3)
-    await asyncio.sleep(5)
-    print("clicked the 3rd prediction")
+    day = await pred_day()
+    
+    if day == '...':
+        print("Waiting for preditions...")
+        await expect(realnaps_tab.locator('//span[@id="day"]')).to_contain_text('...', timeout=default_timeout)
+
+    # for i in range(1-39):
+    #     await expect(realnaps_tab.locator('//span[@id="day"]'), 
+    #                 str(i)).to_be_visible(timeout=default_timeout)
+
+    print("Day displayed.")
+    # print("Abouting clicking the 3rd prediction")
+    # await asyncio.sleep(5)
+    # await dot_position(3)
+    # await asyncio.sleep(5)
+    # print("clicked the 3rd prediction")
 
 
     input("Enter something here: ")
