@@ -1,4 +1,5 @@
 import asyncio, os
+from random import randint
 from dotenv import load_dotenv
 from os import environ as env_variable
 from playwright.async_api import async_playwright, Playwright, expect
@@ -55,6 +56,12 @@ async def run(playwright: Playwright):
     async def pred_day():
         return await realnaps_tab.inner_text('//span[@id="day"]')
 
+    async def get_homeTeam():
+        return await realnaps_tab.inner_text('//div[@id="homeTxt" and @class="col"]')
+    
+    async def get_awayTeam():
+        return await realnaps_tab.inner_text('//div[@id="awayTxt" and @class="col"]')
+    
     day = await pred_day()
     
     if day == '...':
@@ -64,8 +71,17 @@ async def run(playwright: Playwright):
 
     print("Prediction displayed.")
 
-    dot = await dot_position(2)  #0=1, 1=2, 2=3
+    current_season_dot_pos: int = randint(1, 2)
+    print(f"We are working with team {current_season_dot_pos}")
+    dot = await dot_position(current_season_dot_pos)  #0=1, 1=2, 2=3
     await dot.click()
+    
+    
+    homeTeam: str = await get_homeTeam()
+    awayTeam: str = await get_awayTeam()
+    
+    print(f"Predicted match at match day {await pred_day()} is {homeTeam} vs. {awayTeam}")
+
     # await asyncio.sleep(5)
     # print("clicked the 3rd prediction")
 
