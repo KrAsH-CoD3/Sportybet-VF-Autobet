@@ -51,6 +51,7 @@ async def run(playwright: Playwright):
     # await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
     
     async def dot_position(position):
+        if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
         return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
 
     async def pred_day():
@@ -71,7 +72,7 @@ async def run(playwright: Playwright):
 
     print("Prediction displayed.")
 
-    current_season_dot_pos: int = randint(1, 2)
+    current_season_dot_pos: int = randint(0, 2)
     print(f"We are working with team {current_season_dot_pos}")
     dot = await dot_position(current_season_dot_pos)  #0=1, 1=2, 2=3
     await dot.click()
