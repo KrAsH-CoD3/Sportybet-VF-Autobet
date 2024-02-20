@@ -4,3 +4,19 @@ https://www.sportybet.com/ng/m/virtual
 
 https://realnaps.com/signal/premium/ultra/sportybet-england-league.php
 
+
+x close
+//*[@id="tawk-mpreview-close"]/i
+
+Away team
+//div[@id="homeTxt" and @class="col"]
+//div[@id="awayTxt" and @class="col"]
+
+Day
+//span[@id="day"]
+
+
+
+
+
+

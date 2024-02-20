@@ -23,29 +23,46 @@ async def run(playwright: Playwright):
         **device,
     )
 
-        
-    page = await context.new_page()
+    default_timeout: int = 30 * 1000
+    
+    sporty_tab = await context.new_page()
     if len(context.pages) > 0: await context.pages[0].close()
 
-    # page.set_default_navigation_timeout(30 * 1000)
-    page.set_default_timeout(30 * 1000)
-    await page.goto("https://www.sportybet.com/ng/lite/login")
-    await page.locator('//input[@name="username"]').fill(username)
-    await page.locator('//input[@name="password"]').fill(password)
-    await page.get_by_role('button', name='Log In').click()
-    await expect(page.locator('a.m-balance')).to_be_visible()
-    while True:
-        try: 
-            await page.goto("https://www.sportybet.com/ng/virtual")
-            break
-        except TimeoutError: ...
-    await page.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
-    iframe = page.frame_locator("iframe").nth(0)
-    await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=20 * 1000)
-    await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
+    # sporty_tab.set_default_navigation_timeout(default_timeout)
+    # sporty_tab.set_default_timeout(default_timeout)
+    # await sporty_tab.goto("https://www.sportybet.com/ng/lite/login")
+    # await sporty_tab.locator('//input[@name="username"]').fill(username)
+    # await sporty_tab.locator('//input[@name="password"]').fill(password)
+    # await sporty_tab.get_by_role('button', name='Log In').click()
+    # await expect(sporty_tab.locator('a.m-balance')).to_be_visible()
+    # while True:
+    #     try: 
+    #         await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
+    #         await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
+    #         break
+    #     except TimeoutError: ...
+    # iframe = sporty_tab.frame_locator("iframe").nth(0)
+    # await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=20 * 1000)
+    # await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
+
+    realnaps_tab = await context.new_page()
+    await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
+    # await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
+    
+    async def pred_team(position):
+        return await realnaps_tab.get_by_role('link', name=str(position))
+
+    print("Waiting for preditions")
+    await expect(realnaps_tab.locator('//span[@id="day"]')).not_to_be_visible(timeout=default_timeout)
+
+    print("Abouting clicking the 3rd prediction")
+    await asyncio.sleep(5)
+    await pred_team(3)
+    await asyncio.sleep(5)
+    print("clicked the 3rd prediction")
+
+
     input("Enter something here: ")
-
-
     await context.close()
 
     
