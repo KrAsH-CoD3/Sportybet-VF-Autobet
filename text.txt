@@ -16,6 +16,9 @@ Day
 //span[@id="day"]
 
 
+//a[@class="swift bg-dark" and @name="2"]
+//a[@class="swift" and @name="1"]
+
 
 
 

@@ -50,7 +50,7 @@ async def run(playwright: Playwright):
     # await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
     
     async def dot_position(position):
-        return await realnaps_tab.get_by_role('link', name=str(position))
+        return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
 
     async def pred_day():
         return await realnaps_tab.inner_text('//span[@id="day"]')
@@ -59,16 +59,13 @@ async def run(playwright: Playwright):
     
     if day == '...':
         print("Waiting for preditions...")
-        await expect(realnaps_tab.locator('//span[@id="day"]')).to_contain_text('...', timeout=default_timeout)
+        await expect(realnaps_tab.locator('//span[@id="day"]')
+                     ).not_to_contain_text('...', timeout=default_timeout)
 
-    # for i in range(1-39):
-    #     await expect(realnaps_tab.locator('//span[@id="day"]'), 
-    #                 str(i)).to_be_visible(timeout=default_timeout)
+    print("Prediction displayed.")
 
-    print("Day displayed.")
-    # print("Abouting clicking the 3rd prediction")
-    # await asyncio.sleep(5)
-    # await dot_position(3)
+    dot = await dot_position(2)  #0=1, 1=2, 2=3
+    await dot.click()
     # await asyncio.sleep(5)
     # print("clicked the 3rd prediction")
 
