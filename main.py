@@ -97,9 +97,11 @@ async def run(playwright: Playwright):
         await team.click()
         
         while True:
-            # Select predicted team
+            # Get predicted team
             team: list = await get_team()
             print(f"Day {weekday}: {team[0]} vs. {team[1]}")
+
+            
 
 
 

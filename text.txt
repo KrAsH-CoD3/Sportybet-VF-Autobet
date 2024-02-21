@@ -9,7 +9,10 @@ x close
 //*[@id="tawk-mpreview-close"]/i
 
 
-//span[@class="text--uppercase" and contains(text(), "Week 27")]
+//div[@_ngcontent-pah-c355 and contains(text(), "CRY")]//..//..//..//..//..//..//following-sibling::div[1]
 
 
+//div[@_ngcontent-oof-c355 and contains(text(), "CRY")]
 
+
+//div[contains(text(), "CRY")]//..//..//..//..
