@@ -39,7 +39,7 @@ async def run(playwright: Playwright):
     # await sporty_tab.get_by_role('button', name='Log In').click()
 
     # Login into Sportybet using Cookie 
-    my_cookie = ast.literal_eval(env_variable.get('my_cookie'))  # Convert string literal to list
+    my_cookie: list = ast.literal_eval(env_variable.get('my_cookie'))  # Convert string literal to list
     await context.clear_cookies()
     await context.add_cookies(my_cookie)
     await sporty_tab.goto("https://www.sportybet.com/ng/lite")
@@ -67,18 +67,17 @@ async def run(playwright: Playwright):
         if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
         return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
 
-    async def pred_day():
-        return await realnaps_tab.inner_text('//span[@id="day"]')
+    async def pred_day() -> str: return await realnaps_tab.inner_text('//span[@id="day"]')
 
-    async def get_homeTeam():
-        return await realnaps_tab.inner_text('//div[@id="homeTxt" and @class="col"]')
+    async def get_team() -> list:
+        hometeam: str = await realnaps_tab.inner_text('//div[@id="homeTxt" and @class="col"]')
+        awayteam: str = await realnaps_tab.inner_text('//div[@id="awayTxt" and @class="col"]')
+        return [hometeam, awayteam] 
     
-    async def get_awayTeam():
-        return await realnaps_tab.inner_text('//div[@id="awayTxt" and @class="col"]')
+    async def get_mth_timer(): return await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
     
-    async def get_mth_timer():
-        return await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
-    
+    async def mth_timer() -> str: return str(await get_mth_timer())[1:]
+
     weekday: str = await pred_day()
     if weekday == '...':
         print("Waiting for preditions...")
@@ -88,18 +87,19 @@ async def run(playwright: Playwright):
 
     sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
     print("Prediction displayed.")
-    print(await get_mth_timer())
+    print(mth_timer)
 
-    # Select predicted team
-    # current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
-    # print(f"We are working with team {current_season_dot_pos + 1}")
-    # team = await dot_position(current_season_dot_pos) 
-    # await team.click()
-    
-    # homeTeam: str = await get_homeTeam()
-    # awayTeam: str = await get_awayTeam()
-    
-    # print(f"Day {day}: {homeTeam} vs. {awayTeam}")
+    while True:
+        # Randomly select 1 of 3 slides every season 
+        current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
+        print(f"We are working with team {current_season_dot_pos + 1} this season.")
+        team = await dot_position(current_season_dot_pos) 
+        await team.click()
+        
+        while True:
+            # Select predicted team
+            team: list = await get_team()
+            print(f"Day {weekday}: {team[0]} vs. {team[1]}")
 
 
 
