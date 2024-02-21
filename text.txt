@@ -8,18 +8,8 @@ https://realnaps.com/signal/premium/ultra/sportybet-england-league.php
 x close
 //*[@id="tawk-mpreview-close"]/i
 
-Away team
-//div[@id="homeTxt" and @class="col"]
-//div[@id="awayTxt" and @class="col"]
 
-Day
-//span[@id="day"]
-
-
-//a[@class="swift bg-dark" and @name="2"]
-//a[@class="swift" and @name="1"]
-
-
+//span[@class="text--uppercase" and contains(text(), "Week 27")]
 
 
 
