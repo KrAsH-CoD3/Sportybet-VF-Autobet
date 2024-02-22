@@ -109,11 +109,6 @@ async def run(playwright: Playwright):
             await realnaps_tab.close()
             odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
             await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(0).click()
-            print("clicked Over")
-            await asyncio.sleep(5)
-            await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(1).click()
-            await asyncio.sleep(5)
-            print("clicked under")
             input(f"Over: {odds[0]} | Under: {odds[1]}")
             break
         break
