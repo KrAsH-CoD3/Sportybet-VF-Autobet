@@ -81,7 +81,7 @@ async def run(playwright: Playwright):
     
     async def get_mth_timer(): return await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
     
-    async def mth_timer() -> str: return str(await get_mth_timer())[1:]
+    async def str_mth_timer() -> str: return str(await get_mth_timer())[1:]
 
     weekday: str = await pred_day()
     if weekday == '...':
@@ -92,34 +92,36 @@ async def run(playwright: Playwright):
 
     sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
     print(f"Prediction displayed. Current weekday is {weekday}")
-    context.pages[0]
-    mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
-    timeout = datetime.strptime("00:00", "%M:%S").time()
-    rem_time = timedelta(hours=mthTimer.hour, minutes=mthTimer.minute, seconds=mthTimer.second) - timedelta(
-        hours=timeout.hour, minutes=timeout.minute, seconds=timeout.second)
-    print(f'Remaing time is {str(rem_time).split(":")[2]}')
-
-    # while True:
-    #     # Randomly select 1 of 3 slides every season 
-    #     current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
-    #     print(f"We are working with team {current_season_dot_pos + 1} this season.")
-    #     team = await dot_position(current_season_dot_pos) 
-    #     await team.click()
-    #     tabs: list = context.pages
-    #     tabs[0]
+    
+    while True:
+        # Randomly select 1 of 3 slides every season 
+        current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
+        print(f"We are working with team {current_season_dot_pos + 1} this season.")
+        team = await dot_position(current_season_dot_pos) 
+        await team.click()
         
-    #     while True:
-    #         # Get predicted team
-    #         team: list = await get_team()
-    #         print(f"Day {weekday}: {team[0]} vs. {team[1]}")
-    #         await realnaps_tab.close()
-    #         odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
-    #         await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(0).click()
-    #         input(f"Over: {odds[0]} | Under: {odds[1]}")
-    #         break
-    #     break
+        while True:
+            # Get predicted team
+            team: list = await get_team()
+            print(f"Day {weekday}: {team[0]} vs. {team[1]}")
+            await realnaps_tab.close()
+            odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
+            await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(0).click()
+            input(f"Over: {odds[0]} | Under: {odds[1]}\nBut only over picked")
 
-
+            # await sporty_tab.bring_to_front()
+            mthTimer: datetime = datetime.strptime(await str_mth_timer(), "%M:%S").time()
+            timeout: datetime = datetime.strptime("00:00", "%M:%S").time()
+            rem_time: timedelta = timedelta(hours=mthTimer.hour, minutes=mthTimer.minute, seconds=mthTimer.second) - timedelta(
+                hours=timeout.hour, minutes=timeout.minute, seconds=timeout.second)
+            str_rem_time: str = str(rem_time)
+            if str_rem_time.split(":")[1] == "00":
+                print(f'Countdown time is {str(rem_time).split(":")[2]} seconds.')
+            else:
+                print(f'Countdown time is {str(rem_time).split(":")[1]}:{str(rem_time).split(":")[2]}')
+            # await realnaps_tab.close()
+            break
+        break
 
 
 

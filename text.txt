@@ -11,10 +11,10 @@ x close
 
 //div[contains(text(), "CRY")]/../../../../following-sibling::div
 
-list constaining both odds
-//div[contains(text(), "CRY")]/../../../../following-sibling::div//over-under-market//odd-box//span
 
+Red Bar - Live match
+//gr-header[@class="ng-star-inserted live-status-playing"]
 
-
-
+Place bet
+//dynamic-footer-quick-bet[@id="quick-bet-button"]
 
