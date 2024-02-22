@@ -32,11 +32,6 @@ async def run(playwright: Playwright):
     sporty_tab.set_default_navigation_timeout(default_timeout)
     sporty_tab.set_default_timeout(default_timeout)
 
-    # Login into Sportybet using loginPage 
-    # await sporty_tab.goto("https://www.sportybet.com/ng/lite/login")
-    # await sporty_tab.locator('//input[@name="username"]').fill(username)
-    # await sporty_tab.locator('//input[@name="password"]').fill(password)
-    # await sporty_tab.get_by_role('button', name='Log In').click()
 
     # Login into Sportybet using Cookie 
     my_cookie: list = ast.literal_eval(env_variable.get('my_cookie'))  # Convert string literal to list
@@ -44,15 +39,24 @@ async def run(playwright: Playwright):
     await context.add_cookies(my_cookie)
     await sporty_tab.goto("https://www.sportybet.com/ng/lite")
     logged_in = await sporty_tab.locator('a.m-balance').is_visible()
-    print("Logged in successfully using Cookie.")
 
     if logged_in:
         while True:
             try: 
+                print("Logged in successfully using Cookie.")
                 await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
                 await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
                 break
             except TimeoutError: ...
+    else:
+        # Login into Sportybet using loginPage 
+        await sporty_tab.goto("https://www.sportybet.com/ng/lite/login")
+        await sporty_tab.locator('//input[@name="username"]').fill(username)
+        await sporty_tab.locator('//input[@name="password"]').fill(password)
+        await sporty_tab.get_by_role('button', name='Log In').click()
+        print("Logged in successfully using Login Page.")
+        await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
+        await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
     iframe = sporty_tab.frame_locator("iframe").nth(0)
     await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=20 * 1000)
     await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
@@ -87,7 +91,7 @@ async def run(playwright: Playwright):
 
     sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
     print("Prediction displayed.")
-    print(mth_timer)
+    print(await mth_timer())
 
     while True:
         # Randomly select 1 of 3 slides every season 
@@ -100,8 +104,13 @@ async def run(playwright: Playwright):
             # Get predicted team
             team: list = await get_team()
             print(f"Day {weekday}: {team[0]} vs. {team[1]}")
+            odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
+            [print(odd) for odd in odds]
+            input(f"Over: {odds[0]} | Under: {odds[1]}")
+            break
+        break
 
-            
+
 
 
 
@@ -118,7 +127,7 @@ async def run(playwright: Playwright):
     #     file.write(await context.cookies("https://sportybet.com"))
     
     
-    input("Enter something here: ")
+    # input("Enter something here: ")
     await context.close()
 
     
