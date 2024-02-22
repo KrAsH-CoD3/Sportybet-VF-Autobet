@@ -58,7 +58,7 @@ async def run(playwright: Playwright):
         await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
         await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
     iframe = sporty_tab.frame_locator("iframe").nth(0)
-    await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=20 * 1000)
+    await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=30 * 1000)
     await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
 
 
@@ -99,13 +99,21 @@ async def run(playwright: Playwright):
         print(f"We are working with team {current_season_dot_pos + 1} this season.")
         team = await dot_position(current_season_dot_pos) 
         await team.click()
+        tabs: list = context.pages
+        tabs[0]
         
         while True:
             # Get predicted team
             team: list = await get_team()
             print(f"Day {weekday}: {team[0]} vs. {team[1]}")
+            await realnaps_tab.close()
             odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
-            [print(odd) for odd in odds]
+            await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(0).click()
+            print("clicked Over")
+            await asyncio.sleep(5)
+            await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(1).click()
+            await asyncio.sleep(5)
+            print("clicked under")
             input(f"Over: {odds[0]} | Under: {odds[1]}")
             break
         break
