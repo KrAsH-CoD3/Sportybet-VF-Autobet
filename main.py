@@ -3,6 +3,7 @@ import asyncio, os
 from random import randint
 from dotenv import load_dotenv
 from os import environ as env_variable
+from datetime import datetime, timedelta
 from playwright.async_api import async_playwright, Playwright, expect
 
 load_dotenv(override=True)
@@ -90,28 +91,33 @@ async def run(playwright: Playwright):
         weekday: int = int(await pred_day())
 
     sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
-    print("Prediction displayed.")
-    print(await mth_timer())
+    print(f"Prediction displayed. Current weekday is {weekday}")
+    context.pages[0]
+    mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
+    timeout = datetime.strptime("00:00", "%M:%S").time()
+    rem_time = timedelta(hours=mthTimer.hour, minutes=mthTimer.minute, seconds=mthTimer.second) - timedelta(
+        hours=timeout.hour, minutes=timeout.minute, seconds=timeout.second)
+    print(f'Remaing time is {str(rem_time).split(":")[2]}')
 
-    while True:
-        # Randomly select 1 of 3 slides every season 
-        current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
-        print(f"We are working with team {current_season_dot_pos + 1} this season.")
-        team = await dot_position(current_season_dot_pos) 
-        await team.click()
-        tabs: list = context.pages
-        tabs[0]
+    # while True:
+    #     # Randomly select 1 of 3 slides every season 
+    #     current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
+    #     print(f"We are working with team {current_season_dot_pos + 1} this season.")
+    #     team = await dot_position(current_season_dot_pos) 
+    #     await team.click()
+    #     tabs: list = context.pages
+    #     tabs[0]
         
-        while True:
-            # Get predicted team
-            team: list = await get_team()
-            print(f"Day {weekday}: {team[0]} vs. {team[1]}")
-            await realnaps_tab.close()
-            odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
-            await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(0).click()
-            input(f"Over: {odds[0]} | Under: {odds[1]}")
-            break
-        break
+    #     while True:
+    #         # Get predicted team
+    #         team: list = await get_team()
+    #         print(f"Day {weekday}: {team[0]} vs. {team[1]}")
+    #         await realnaps_tab.close()
+    #         odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
+    #         await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(0).click()
+    #         input(f"Over: {odds[0]} | Under: {odds[1]}")
+    #         break
+    #     break
 
 
 
@@ -130,7 +136,7 @@ async def run(playwright: Playwright):
     #     file.write(await context.cookies("https://sportybet.com"))
     
     
-    # input("Enter something here: ")
+    input("Enter something here: ")
     await context.close()
 
     
