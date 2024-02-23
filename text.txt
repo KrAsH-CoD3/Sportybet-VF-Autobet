@@ -1,11 +1,4 @@
-https://www.sportybet.com/ng/lite/login
-https://www.sportybet.com/ng/m/virtual
-
-
-https://realnaps.com/signal/premium/ultra/sportybet-england-league.php
-
-
-x close
+realnaps tawk x close
 //*[@id="tawk-mpreview-close"]/i
 
 
@@ -13,8 +6,32 @@ Red Bar - Live match
 //gr-header[@class="ng-star-inserted live-status-playing"]
 
 
-On screen done
-//div[@class="col grid grid-middle grid-center keypad__done"]
+Back button
+//span[@id="back-button"]
 
+sporty x close 
+//span[@class="icon icon-clear"]
 
+refresh history betslips
+//span[@class="icon icon-reload icon-1_8x"]
 
+Sending Ticket
+//div[contains(text(), "Sending Ticket")]
+
+Ticket sent
+//div[contains(text(), "Ticket Sent")]
+
+ticket sent check mark
+//span[@class="icon icon-circle-checkmark ng-tns-c92-4"]
+
+Lost
+//span[@class="status-text lost"]
+
+betslips = returns list of all containing ticket but we need the first one
+//div[contains(text(), "Ticket")]
+
+lost ticket
+//div[@class="status grid grid-center grid-middle lost"]
+
+paidout ticket
+//div[@class="status grid grid-center grid-middle paidout"]
