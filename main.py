@@ -1,5 +1,6 @@
 import ast
 import asyncio, os
+import contextlib
 from random import randint
 from dotenv import load_dotenv
 from os import environ as env_variable
@@ -60,11 +61,14 @@ async def run(playwright: Playwright):
         await sporty_tab.locator('//input[@name="password"]').fill(password)
         await sporty_tab.get_by_role('button', name='Log In').click()
         print("Logged in successfully using Login Page.")
-        await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
-        await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
-    iframe = sporty_tab.frame_locator("iframe").nth(0)
-    await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=30 * 1000)
-    await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
+    while True:
+        with contextlib.suppress(TimeoutError):
+            await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
+            await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
+            iframe = sporty_tab.frame_locator("iframe").nth(0)
+            await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=30 * 1000)
+            await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
+            break
 
 
     # Opens Realnaps
@@ -112,6 +116,7 @@ async def run(playwright: Playwright):
             await realnaps_tab.close()
 
             # await sporty_tab.bring_to_front()
+            won: bool = True
             mthTimer: datetime = datetime.strptime(await str_mth_timer(), "%M:%S").time()
             timeout: datetime = datetime.strptime("00:00", "%M:%S").time()
             rem_time: timedelta = timedelta(hours=mthTimer.hour, minutes=mthTimer.minute, seconds=mthTimer.second) - timedelta(
@@ -139,6 +144,11 @@ async def run(playwright: Playwright):
             num8 = await iframe.locator(numpad_xpath).nth(7)
             num9 = await iframe.locator(numpad_xpath).nth(8)
             num0 = await iframe.locator(numpad_xpath).nth(9)
+
+            if won:
+                num5.click()
+                num5.click()
+                num5.click()
 
             break
         break
