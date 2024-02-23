@@ -96,7 +96,7 @@ async def run(playwright: Playwright):
         weekday: int = int(await pred_day())
 
     sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
-    print(f"Prediction displayed. Current weekday is {weekday}")
+    print(f"Prediction displayed.")
     
     while True:
         # Randomly select 1 of 3 slides every season 
@@ -110,12 +110,6 @@ async def run(playwright: Playwright):
             team: list = await get_team()
             print(f"Day {weekday}: {team[0]} vs. {team[1]}")
             await realnaps_tab.close()
-            rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
-            # odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
-            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
-            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
-            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
-            await iframe.locator('//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]').nth(1).click()
 
             # await sporty_tab.bring_to_front()
             mthTimer: datetime = datetime.strptime(await str_mth_timer(), "%M:%S").time()
@@ -124,10 +118,28 @@ async def run(playwright: Playwright):
                 hours=timeout.hour, minutes=timeout.minute, seconds=timeout.second)
             str_rem_time: str = str(rem_time)
             if str_rem_time.split(":")[1] == "00":
-                print(f'Countdown time is {str(rem_time).split(":")[2]} seconds.')
+                print(f'Countdown time is {str_rem_time.split(":")[2]} seconds.')
             else:
-                print(f'Countdown time is {str(rem_time).split(":")[1]}:{str(rem_time).split(":")[2]}')
+                print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             # await realnaps_tab.close()
+            
+            rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
+            numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
+            # odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
+            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
+            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
+            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
+            num1 = await iframe.locator(numpad_xpath).nth(0)
+            num2 = await iframe.locator(numpad_xpath).nth(1)
+            num3 = await iframe.locator(numpad_xpath).nth(2)
+            num4 = await iframe.locator(numpad_xpath).nth(3)
+            num5 = await iframe.locator(numpad_xpath).nth(4)
+            num6 = await iframe.locator(numpad_xpath).nth(5)
+            num7 = await iframe.locator(numpad_xpath).nth(6)
+            num8 = await iframe.locator(numpad_xpath).nth(7)
+            num9 = await iframe.locator(numpad_xpath).nth(8)
+            num0 = await iframe.locator(numpad_xpath).nth(9)
+
             break
         break
 
