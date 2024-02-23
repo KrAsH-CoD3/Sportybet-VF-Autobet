@@ -12,13 +12,9 @@ x close
 Red Bar - Live match
 //gr-header[@class="ng-star-inserted live-status-playing"]
 
-input stake amount
-//input[@class="col col-4 system-bet system-bet__stake"]
 
-On screen number
-//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]
-
-
+On screen done
+//div[@class="col grid grid-middle grid-center keypad__done"]
 
 
 

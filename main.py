@@ -46,26 +46,21 @@ async def run(playwright: Playwright):
     await sporty_tab.goto("https://www.sportybet.com/ng/lite")
     logged_in = await sporty_tab.locator('a.m-balance').is_visible()
 
-    if logged_in:
-        while True:
-            try: 
-                print("Logged in successfully using Cookie.")
-                await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
-                await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
-                break
-            except TimeoutError: ...
-    else:
+    if not logged_in:
         # Login into Sportybet using loginPage 
         await sporty_tab.goto("https://www.sportybet.com/ng/lite/login")
         await sporty_tab.locator('//input[@name="username"]').fill(username)
         await sporty_tab.locator('//input[@name="password"]').fill(password)
         await sporty_tab.get_by_role('button', name='Log In').click()
         print("Logged in successfully using Login Page.")
+    else:
+        print("Logged in successfully using Cookie.")
     while True:
         with contextlib.suppress(TimeoutError):
             await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
-            await sporty_tab.frame_locator("iframe").nth(0).get_by_text('England League').nth(1).click()
+            await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
             iframe = sporty_tab.frame_locator("iframe").nth(0)
+            await iframe.get_by_text('England League').nth(1).click()
             await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=30 * 1000)
             await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
             break
@@ -74,7 +69,6 @@ async def run(playwright: Playwright):
     # Opens Realnaps
     realnaps_tab = await context.new_page()
     await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
-    # await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
     
     async def get_team() -> list:
         hometeam: str = await realnaps_tab.inner_text('//div[@id="homeTxt" and @class="col"]')
@@ -128,28 +122,31 @@ async def run(playwright: Playwright):
                 print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             # await realnaps_tab.close()
             
+            numpad_done_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__done"]'
             rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
             numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
             # odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
             await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
             await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
             await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
-            num1 = await iframe.locator(numpad_xpath).nth(0)
-            num2 = await iframe.locator(numpad_xpath).nth(1)
-            num3 = await iframe.locator(numpad_xpath).nth(2)
-            num4 = await iframe.locator(numpad_xpath).nth(3)
-            num5 = await iframe.locator(numpad_xpath).nth(4)
-            num6 = await iframe.locator(numpad_xpath).nth(5)
-            num7 = await iframe.locator(numpad_xpath).nth(6)
-            num8 = await iframe.locator(numpad_xpath).nth(7)
-            num9 = await iframe.locator(numpad_xpath).nth(8)
-            num0 = await iframe.locator(numpad_xpath).nth(9)
+            num1 = iframe.locator(numpad_xpath).nth(0)
+            num2 = iframe.locator(numpad_xpath).nth(1)
+            num3 = iframe.locator(numpad_xpath).nth(2)
+            num4 = iframe.locator(numpad_xpath).nth(3)
+            num5 = iframe.locator(numpad_xpath).nth(4)
+            num6 = iframe.locator(numpad_xpath).nth(5)
+            num7 = iframe.locator(numpad_xpath).nth(6)
+            num8 = iframe.locator(numpad_xpath).nth(7)
+            num9 = iframe.locator(numpad_xpath).nth(8)
+            num0 = iframe.locator(numpad_xpath).nth(9)
 
             if won:
-                num5.click()
-                num5.click()
-                num5.click()
-
+                await num1.click()
+                await num0.click()
+                await num0.click()
+                # await asyncio.sleep(1)
+                await iframe.locator(numpad_done_xpath).click()
+                await iframe.locator('//div[contains(text(), "Place bet")]').click()
             break
         break
 
