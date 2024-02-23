@@ -9,12 +9,16 @@ x close
 //*[@id="tawk-mpreview-close"]/i
 
 
-//div[contains(text(), "CRY")]/../../../../following-sibling::div
-
-
 Red Bar - Live match
 //gr-header[@class="ng-star-inserted live-status-playing"]
 
-Place bet
-//dynamic-footer-quick-bet[@id="quick-bet-button"]
+input stake amount
+//input[@class="col col-4 system-bet system-bet__stake"]
+
+On screen number
+//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]
+
+
+
+
 

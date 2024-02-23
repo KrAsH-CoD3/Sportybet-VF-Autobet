@@ -22,7 +22,11 @@ async def run(playwright: Playwright):
         headless = False,
         color_scheme ='dark',
         channel= "chrome",
-        **device,
+        user_agent = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.57 Mobile Safari/537.36',
+        viewport = {'width': 400, 'height': 590},
+        device_scale_factor = 2.625,
+        # viewport = {'width': 412, 'height': 839}
+        # **device,
     )
 
     default_timeout: int = 30 * 1000
@@ -68,20 +72,21 @@ async def run(playwright: Playwright):
     await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
     # await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
     
-    async def dot_position(position):
-        if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
-        return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
-
-    async def pred_day() -> str: return await realnaps_tab.inner_text('//span[@id="day"]')
-
     async def get_team() -> list:
         hometeam: str = await realnaps_tab.inner_text('//div[@id="homeTxt" and @class="col"]')
         awayteam: str = await realnaps_tab.inner_text('//div[@id="awayTxt" and @class="col"]')
         return [hometeam, awayteam] 
     
+    async def dot_position(position):
+        if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
+        return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
+
+    async def str_mth_timer() -> str: return str(await get_mth_timer())[1:]
+    
+    async def pred_day() -> str: return await realnaps_tab.inner_text('//span[@id="day"]')
+    
     async def get_mth_timer(): return await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
     
-    async def str_mth_timer() -> str: return str(await get_mth_timer())[1:]
 
     weekday: str = await pred_day()
     if weekday == '...':
@@ -105,9 +110,12 @@ async def run(playwright: Playwright):
             team: list = await get_team()
             print(f"Day {weekday}: {team[0]} vs. {team[1]}")
             await realnaps_tab.close()
-            odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').all_inner_texts()
-            await iframe.locator(f'//div[contains(text(), "{team[0]}")]/../../../../following-sibling::div//over-under-market//odd-box//span').nth(0).click()
-            input(f"Over: {odds[0]} | Under: {odds[1]}\nBut only over picked")
+            rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
+            # odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
+            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
+            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
+            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
+            await iframe.locator('//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]').nth(1).click()
 
             # await sporty_tab.bring_to_front()
             mthTimer: datetime = datetime.strptime(await str_mth_timer(), "%M:%S").time()
