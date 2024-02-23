@@ -16,10 +16,11 @@ refresh history betslips
 //span[@class="icon icon-reload icon-1_8x"]
 
 Sending Ticket
-//div[contains(text(), "Sending Ticket")]
+//span[contains(text(), "Sending Ticket")]
+Sending Ticket
 
 Ticket sent
-//div[contains(text(), "Ticket Sent")]
+//span[contains(text(), "Ticket Sent")]
 
 ticket sent check mark
 //span[@class="icon icon-circle-checkmark ng-tns-c92-4"]

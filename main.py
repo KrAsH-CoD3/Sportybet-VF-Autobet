@@ -147,12 +147,10 @@ async def run(playwright: Playwright):
                 # await asyncio.sleep(1)
                 await iframe.locator(numpad_done_xpath).click()
                 await iframe.locator('//div[contains(text(), "Place bet")]').click()
-                await expect(iframe.locator('//div[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=10 * 1000)
-                print("Sending ticket")
-                await expect(iframe.locator('//div[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=10 * 1000)
-                print("Sending ticket")
-                await expect(iframe.locator('//span[@class="icon icon-circle-checkmark ng-tns-c92-4"]')).to_be_visible(timeout=10 * 1000)
-                print("Bet Placed.")
+                await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=10 * 1000)
+                print("Sending Ticket.")
+                await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=10 * 1000)
+                print("Ticket Sent, Bet Placed.")
             break
         break
 
