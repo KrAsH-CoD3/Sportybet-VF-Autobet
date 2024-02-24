@@ -31,7 +31,8 @@ async def run(playwright: Playwright):
         # **device,
     )
 
-    prev_won: bool = True
+    won_prev_match: bool = True
+    lost_matches: int = 1
     default_timeout: int = 30 * 1000
     
     sporty_tab = await context.new_page()
@@ -40,7 +41,10 @@ async def run(playwright: Playwright):
     sporty_tab.set_default_navigation_timeout(default_timeout)
     sporty_tab.set_default_timeout(default_timeout)
 
-
+    numpad_done_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__done"]'
+    rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
+    numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
+    
     # Login into Sportybet using Cookie 
     my_cookie: list = ast.literal_eval(env_variable.get('my_cookie'))  # Convert string literal to list
     await context.clear_cookies()
@@ -93,7 +97,13 @@ async def run(playwright: Playwright):
     
     async def pred_day() -> str: return await realnaps_tab.inner_text('//span[@id="day"]')
     
-    # async def get_mth_timer(): return await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
+    async def place_bet(): 
+        await iframe.locator(numpad_done_xpath).click()
+        # await iframe.locator('//div[contains(text(), "Place bet")]').click()
+        # await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=10 * 1000)
+        # print("Sending Ticket.")
+        # await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=10 * 1000)
+        # print("Ticket Sent, Bet Placed.")
     
     async def select_team_slide():
         # Randomly select 1 of 3 slides every season 
@@ -101,7 +111,7 @@ async def run(playwright: Playwright):
         team_slide = await dot_position(current_season_dot_pos) 
         await team_slide.click()
         print(f"We are working with team {current_season_dot_pos + 1} this season.")
-        return current_season_dot_pos
+        # return current_season_dot_pos
 
 
     weekday: str = await pred_day()
@@ -111,9 +121,6 @@ async def run(playwright: Playwright):
                      ).not_to_contain_text('...', timeout=default_timeout)
         weekday: int = int(await pred_day())
 
-    numpad_done_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__done"]'
-    rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
-    numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
     sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
     print(f"Prediction displayed.")
     
@@ -140,7 +147,7 @@ async def run(playwright: Playwright):
                 print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             # await realnaps_tab.close()
             
-            odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
+            # odd: lists = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
             await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
             await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
             await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
@@ -155,20 +162,15 @@ async def run(playwright: Playwright):
             num9 = iframe.locator(numpad_xpath).nth(8)
             num0 = iframe.locator(numpad_xpath).nth(9)
 
-            #  Enter stake value 
-            if prev_won:
-                await num1.click()
-                await num0.click()
-                await num0.click()
-                await iframe.locator(numpad_done_xpath).click()
-                # await iframe.locator('//div[contains(text(), "Place bet")]').click()
-                # await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=10 * 1000)
-                # print("Sending Ticket.")
-                # await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=10 * 1000)
-                # print("Ticket Sent, Bet Placed.")
-            else:
+            num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
+            # set the initial stake amount
+            stakeAmt = 100
+            # type the initial stake amount by clicking the corresponding elements
+            for digit in str(stakeAmt):
+                await num_dict[int(digit)].click()
+            await place_bet()
             
-            
+            # # Get result of previous match
             # await sporty_tab.reload()
             # await expect(iframe.locator(
             #     '//gr-header[@class="ng-star-inserted live-status-playing"]')).to_be_visible(timeout=default_timeout * 3)
@@ -176,6 +178,33 @@ async def run(playwright: Playwright):
             # await expect(iframe.locator(
             #     '//gr-header[@class="ng-star-inserted live-status-playing"]')).not_to_be_visible(timeout=default_timeout * 2)
             # print("Match ended.")
+
+            # if result_text == "lost":
+            #     # double the stake amount
+            #     stake *= 2
+            #     # clear the previous input
+            #     await iframe.locator(clear_xpath).click()
+            #     # type the new stake amount by clicking the corresponding elements
+            #     for digit in str(stake):
+            #         await num_dict[int(digit)].click()
+
+
+
+
+
+
+            # #  Enter stake value 
+            # if won_prev_match:
+            #     await num1.click()
+            #     await num0.click()
+            #     await num0.click()
+            #     await place_bet()
+            # else:
+            #     if lost_matches == 1:
+            #         await num1.click()
+            #         await num0.click()
+            #         await num0.click()
+            #         await place_bet()
             break
         break
 
