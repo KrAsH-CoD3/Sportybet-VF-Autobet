@@ -168,13 +168,13 @@ async def run(playwright: Playwright):
             num0 = iframe.locator(numpad_xpath).nth(9)
 
             num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
-            # type the initial stake amount by clicking the corresponding elements
+            # Type the initial stake amount by clicking the corresponding elements
             for digit in str(stakeAmt):
                 await num_dict[int(digit)].click()
             await place_bet()
 
             # Get result of previous match
-            await goto_vfPage()  # Refresh the page
+            await goto_vfPage()  # Refresh the page because of sportybet logout bug
             print("Waiting for match to begin...")
             await expect(iframe.locator(
                 '//gr-header[@class="ng-star-inserted live-status-playing"]')).to_be_visible(timeout=default_timeout * 5)
@@ -200,43 +200,14 @@ async def run(playwright: Playwright):
                         stakeAmt = 100  # Return back to initial stake amount
                     except AssertionError:
                         stakeAmt *= 2  # Double the previous stake amount
-
-
-                        # # clear the previous input
-                        # await iframe.locator(clear_xpath).click()
-                        # # type the new stake amount by clicking the corresponding elements
-                        # for digit in str(stake):
-                        #     await num_dict[int(digit)].click()
-
-
-
-                        # await expect(iframe.locator(  # We lost
-                        #     '//div[@class="status grid grid-center grid-middle lost"]')
-                        #     ).to_be_visible(timeout=5 * 1000)  # Lost Bet
                     finally:
                         break
                 except AssertionError: 
                     await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
                     continue
-
-
-
-
-            # #  Enter stake value 
-            # if won_prev_match:
-            #     await num1.click()
-            #     await num0.click()
-            #     await num0.click()
-            #     await place_bet()
-            # else:
-            #     if lost_matches == 1:
-            #         await num1.click()
-            #         await num0.click()
-            #         await num0.click()
-            #         await place_bet()
             weekday += 1
-            break
-        break
+            continue
+        continue
 
 
 
