@@ -5,6 +5,7 @@ from random import randint
 from dotenv import load_dotenv
 from os import environ as env_variable
 from datetime import datetime, timedelta
+from playwright._impl._errors import TimeoutError
 from playwright.async_api import async_playwright, Playwright, expect
 
 load_dotenv(override=True)
@@ -30,6 +31,7 @@ async def run(playwright: Playwright):
         # **device,
     )
 
+    prev_won: bool = True
     default_timeout: int = 30 * 1000
     
     sporty_tab = await context.new_page()
@@ -44,24 +46,30 @@ async def run(playwright: Playwright):
     await context.clear_cookies()
     await context.add_cookies(my_cookie)
     await sporty_tab.goto("https://www.sportybet.com/ng/lite")
-    logged_in = await sporty_tab.locator('a.m-balance').is_visible()
-
-    if not logged_in:
+    not_logged_in = await sporty_tab.locator('//a[@class="m-btn m-login-btn" and contains(text(), "Log In")]').is_visible()
+    
+    async def log_in_sporty():
         # Login into Sportybet using loginPage 
         await sporty_tab.goto("https://www.sportybet.com/ng/lite/login")
         await sporty_tab.locator('//input[@name="username"]').fill(username)
         await sporty_tab.locator('//input[@name="password"]').fill(password)
         await sporty_tab.get_by_role('button', name='Log In').click()
         print("Logged in successfully using Login Page.")
-    else:
-        print("Logged in successfully using Cookie.")
+
+    if not_logged_in: await log_in_sporty()
+    else: print("Logged in successfully using Cookie.")
+        
     while True:
-        with contextlib.suppress(TimeoutError):
+        with contextlib.suppress(TimeoutError, AssertionError):
             await sporty_tab.goto("https://www.sportybet.com/ng/virtual")
-            await expect(sporty_tab.locator('//div[@class="m-login-balance"]')).to_be_visible(timeout=default_timeout)
+            # Waits for loadig icon not to be visible 
+            await expect(sporty_tab.locator(
+                '//*[local-name()="svg" and @class="icon loading-icon"]')).not_to_be_visible(timeout=10 * 1000)
+            # Checks if balance is displayed or "Register | Login". Should be False at this point.
+            not_logged_in = await sporty_tab.locator('//span[@data-cms-key="log_in" and contains(text(), "Login")]').is_visible()
             iframe = sporty_tab.frame_locator("iframe").nth(0)
             await iframe.get_by_text('England League').nth(1).click()
-            await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=30 * 1000)
+            await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=default_timeout)
             await iframe.locator('//div[@id="Over_Under_2_5-selector"]').click()
             break
 
@@ -79,12 +87,22 @@ async def run(playwright: Playwright):
         if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
         return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
 
-    async def str_mth_timer() -> str: return str(await get_mth_timer())[1:]
+    async def mth_timer() -> str: 
+        timer = await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
+        return str(timer)[1:]
     
     async def pred_day() -> str: return await realnaps_tab.inner_text('//span[@id="day"]')
     
-    async def get_mth_timer(): return await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
+    # async def get_mth_timer(): return await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
     
+    async def select_team_slide():
+        # Randomly select 1 of 3 slides every season 
+        current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
+        team_slide = await dot_position(current_season_dot_pos) 
+        await team_slide.click()
+        print(f"We are working with team {current_season_dot_pos + 1} this season.")
+        return current_season_dot_pos
+
 
     weekday: str = await pred_day()
     if weekday == '...':
@@ -93,25 +111,25 @@ async def run(playwright: Playwright):
                      ).not_to_contain_text('...', timeout=default_timeout)
         weekday: int = int(await pred_day())
 
+    numpad_done_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__done"]'
+    rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
+    numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
     sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
     print(f"Prediction displayed.")
     
+    # Continously playing games seasons by season
     while True:
-        # Randomly select 1 of 3 slides every season 
-        current_season_dot_pos: int = randint(0, 2)  # 0=1, 1=2, 2=3
-        print(f"We are working with team {current_season_dot_pos + 1} this season.")
-        team = await dot_position(current_season_dot_pos) 
-        await team.click()
-        
+        await select_team_slide()
+
         while True:
             # Get predicted team
+            await realnaps_tab.bring_to_front()
             team: list = await get_team()
             print(f"Day {weekday}: {team[0]} vs. {team[1]}")
-            await realnaps_tab.close()
+            # await realnaps_tab.close()
 
-            # await sporty_tab.bring_to_front()
-            won: bool = True
-            mthTimer: datetime = datetime.strptime(await str_mth_timer(), "%M:%S").time()
+            await sporty_tab.bring_to_front()
+            mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
             timeout: datetime = datetime.strptime("00:00", "%M:%S").time()
             rem_time: timedelta = timedelta(hours=mthTimer.hour, minutes=mthTimer.minute, seconds=mthTimer.second) - timedelta(
                 hours=timeout.hour, minutes=timeout.minute, seconds=timeout.second)
@@ -122,10 +140,7 @@ async def run(playwright: Playwright):
                 print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             # await realnaps_tab.close()
             
-            numpad_done_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__done"]'
-            rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
-            numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
-            # odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
+            odds = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
             await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
             await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
             await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
@@ -140,17 +155,27 @@ async def run(playwright: Playwright):
             num9 = iframe.locator(numpad_xpath).nth(8)
             num0 = iframe.locator(numpad_xpath).nth(9)
 
-            if won:
+            #  Enter stake value 
+            if prev_won:
                 await num1.click()
                 await num0.click()
                 await num0.click()
-                # await asyncio.sleep(1)
                 await iframe.locator(numpad_done_xpath).click()
-                await iframe.locator('//div[contains(text(), "Place bet")]').click()
-                await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=10 * 1000)
-                print("Sending Ticket.")
-                await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=10 * 1000)
-                print("Ticket Sent, Bet Placed.")
+                # await iframe.locator('//div[contains(text(), "Place bet")]').click()
+                # await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=10 * 1000)
+                # print("Sending Ticket.")
+                # await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=10 * 1000)
+                # print("Ticket Sent, Bet Placed.")
+            else:
+            
+            
+            # await sporty_tab.reload()
+            # await expect(iframe.locator(
+            #     '//gr-header[@class="ng-star-inserted live-status-playing"]')).to_be_visible(timeout=default_timeout * 3)
+            # print("Match started.")
+            # await expect(iframe.locator(
+            #     '//gr-header[@class="ng-star-inserted live-status-playing"]')).not_to_be_visible(timeout=default_timeout * 2)
+            # print("Match ended.")
             break
         break
 

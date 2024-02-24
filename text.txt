@@ -1,32 +1,26 @@
 realnaps tawk x close
 //*[@id="tawk-mpreview-close"]/i
 
+Loading icon
+//*[local-name()="svg" and @class="icon loading-icon"]
+
+loading text
+//div[@class="loading" and contains(text(), "Loading...")]
 
 Red Bar - Live match
 //gr-header[@class="ng-star-inserted live-status-playing"]
 
+Betslip icon
+//span[@class="text-center ng-tns-c139-0 icon icon-ticket"]
 
 Back button
 //span[@id="back-button"]
 
-sporty x close 
-//span[@class="icon icon-clear"]
-
 refresh history betslips
 //span[@class="icon icon-reload icon-1_8x"]
 
-Sending Ticket
-//span[contains(text(), "Sending Ticket")]
-Sending Ticket
-
-Ticket sent
-//span[contains(text(), "Ticket Sent")]
-
-ticket sent check mark
-//span[@class="icon icon-circle-checkmark ng-tns-c92-4"]
-
-Lost
-//span[@class="status-text lost"]
+sporty x close 
+//span[@class="icon icon-clear"]
 
 betslips = returns list of all containing ticket but we need the first one
 //div[contains(text(), "Ticket")]
