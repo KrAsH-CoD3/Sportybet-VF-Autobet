@@ -31,8 +31,9 @@ async def run(playwright: Playwright):
         # **device,
     )
 
-    won_prev_match: bool = True
+    stakeAmt = 100
     lost_matches: int = 1
+    won_prev_match: bool = True
     default_timeout: int = 30 * 1000
     
     sporty_tab = await context.new_page()
@@ -131,6 +132,7 @@ async def run(playwright: Playwright):
         while True:
             # Get predicted team
             await realnaps_tab.bring_to_front()
+            if weekday == await pred_day():
             team: list = await get_team()
             print(f"Day {weekday}: {team[0]} vs. {team[1]}")
             # await realnaps_tab.close()
@@ -164,31 +166,53 @@ async def run(playwright: Playwright):
 
             num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
             # set the initial stake amount
-            stakeAmt = 100
             # type the initial stake amount by clicking the corresponding elements
             for digit in str(stakeAmt):
                 await num_dict[int(digit)].click()
             await place_bet()
-            
-            # # Get result of previous match
-            # await sporty_tab.reload()
-            # await expect(iframe.locator(
-            #     '//gr-header[@class="ng-star-inserted live-status-playing"]')).to_be_visible(timeout=default_timeout * 3)
-            # print("Match started.")
-            # await expect(iframe.locator(
-            #     '//gr-header[@class="ng-star-inserted live-status-playing"]')).not_to_be_visible(timeout=default_timeout * 2)
-            # print("Match ended.")
 
-            # if result_text == "lost":
-            #     # double the stake amount
-            #     stake *= 2
-            #     # clear the previous input
-            #     await iframe.locator(clear_xpath).click()
-            #     # type the new stake amount by clicking the corresponding elements
-            #     for digit in str(stake):
-            #         await num_dict[int(digit)].click()
+            # Get result of previous match
+            await sporty_tab.reload()
+            await expect(iframe.locator(
+                '//gr-header[@class="ng-star-inserted live-status-playing"]')).to_be_visible(timeout=default_timeout * 3)
+            print("Match started.")
+            await expect(iframe.locator(
+                '//gr-header[@class="ng-star-inserted live-status-playing"]')).not_to_be_visible(timeout=default_timeout * 2)
+            print("Match ended. Checking result...")
+            await iframe.locator('//span[@class="text-center ng-tns-c139-0 icon icon-ticket"]').click()  # Click bet history
+            # Wait for bet history tickets to be visible
+            await expect(iframe.locator(
+                '//div[contains(text(), "Ticket")]').nth(0)).to_be_visible(timeout=default_timeout)
+            while True:
+                try:  # Check for Open Bet 
+                    await expect(iframe.locator( # Match still
+                        '//div[@class="status grid grid-center grid-middle open"]')
+                        ).not_to_be_visible(timeout=5 * 1000) # Open Bet
+                    try:  
+                        await expect(iframe.locator(  # We won
+                            '//div[@class="status grid grid-center grid-middle paidout"]')
+                            ).to_be_visible(timeout=5 * 1000)  # Paidout Bet
+                        stakeAmt = 100  # Return back to initial stake amount
+                    except TimeoutError:
+                        stakeAmt *= 2  # Double the previous stake amount
 
 
+                        # # clear the previous input
+                        # await iframe.locator(clear_xpath).click()
+                        # # type the new stake amount by clicking the corresponding elements
+                        # for digit in str(stake):
+                        #     await num_dict[int(digit)].click()
+
+
+
+                        # await expect(iframe.locator(  # We lost
+                        #     '//div[@class="status grid grid-center grid-middle lost"]')
+                        #     ).to_be_visible(timeout=5 * 1000)  # Lost Bet
+                    finally:
+                        break
+                except TimeoutError: 
+                    await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
+                    continue
 
 
 
@@ -205,6 +229,7 @@ async def run(playwright: Playwright):
             #         await num0.click()
             #         await num0.click()
             #         await place_bet()
+            weekday += 1
             break
         break
 
