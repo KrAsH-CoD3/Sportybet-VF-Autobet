@@ -83,7 +83,7 @@ async def run(playwright: Playwright):
     iframe = sporty_tab.frame_locator("iframe").nth(0)
     
     # Opens Realnaps
-    realnaps_tab = await context.new_page()
+    realnaps_tab = await context.new_page("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
     await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
     
     async def get_team() -> list:
@@ -99,7 +99,15 @@ async def run(playwright: Playwright):
         timer = await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
         return str(timer)[1:]
     
-    async def pred_day() -> str: return await realnaps_tab.inner_text('//span[@id="day"]')
+    async def pred_day() -> int: 
+        weekday: str = await realnaps_tab.inner_text('//span[@id="day"]')
+        if weekday == '...':
+            print("Waiting for preditions...")
+            await expect(realnaps_tab.locator('//span[@id="day"]')
+                        ).not_to_contain_text('...', timeout=default_timeout * 2)
+            print(f"Prediction displayed.")
+            return int(await realnaps_tab.inner_text('//span[@id="day"]'))
+        return int(weekday)
     
     async def place_bet(): 
         await iframe.locator(numpad_done_xpath).click()
@@ -117,25 +125,17 @@ async def run(playwright: Playwright):
         print(f"We are working with team {current_season_dot_pos + 1} this season.")
         # return current_season_dot_pos
 
-
-    weekday: int = int(await pred_day())
-    if str(weekday) == '...':
-        print("Waiting for preditions...")
-        await expect(realnaps_tab.locator('//span[@id="day"]')
-                     ).not_to_contain_text('...', timeout=default_timeout)
-        weekday: int = int(await pred_day())
-
-    print(f"Prediction displayed.")
+    weekday = await pred_day()
     
     # SEASON GAMES
     while True:
-        await select_team_slide()
+        # await select_team_slide()
 
-        # WEEK GAMES
+        # WEEKDAY GAMES
         while True:
             # Get predicted team
             # await realnaps_tab.bring_to_front()
-            if weekday != int(await pred_day()): continue
+            if weekday != await pred_day(): continue
             team: list = await get_team()
             print(f"Day {str(weekday)}: {team[0]} vs. {team[1]}")
             sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {str(weekday)}")]/following-sibling::*'
@@ -174,6 +174,8 @@ async def run(playwright: Playwright):
                 await num_dict[int(digit)].click()
             await place_bet()
 
+            await realnaps_tab.close()
+
             # Get result of previous match
             await goto_vfPage()  # Refresh the page because of sportybet logout bug
             print("Waiting for match to begin...")
@@ -206,6 +208,8 @@ async def run(playwright: Playwright):
                         await iframe.locator('//span[@class="icon icon-clear"]').click()
                         stakeAmt *= 2  # Double the previous stake amount
                     finally:
+                        realnaps_tab = await context.new_page(
+                            "https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
                         break
                 except AssertionError: 
                     await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
