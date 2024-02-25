@@ -7,26 +7,16 @@ Loading icon
 loading text
 //div[@class="loading" and contains(text(), "Loading...")]
 
-Red Bar - Live match
-//gr-header[@class="ng-star-inserted live-status-playing"]
-
-Betslip icon
-//span[@class="text-center ng-tns-c139-0 icon icon-ticket"]
-
 Back button
 //span[@id="back-button"]
 
-refresh history betslips
-//span[@class="icon icon-reload icon-1_8x"]
 
 sporty x close 
 //span[@class="icon icon-clear"]
 
-betslips = returns list of all containing ticket but we need the first one
-//div[contains(text(), "Ticket")]
 
-lost ticket
-//div[@class="status grid grid-center grid-middle lost"]
+Time out because math is already about to start or is playing already
+  File "C:\Users\LmAo\Documents\AAA_Testing\Sportybet-VF-Autobet\main.py", line 145, in run
+    mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
+                                           ^^^^^^^^^^^^^^^^^
 
-paidout ticket
-//div[@class="status grid grid-center grid-middle paidout"]

@@ -118,26 +118,27 @@ async def run(playwright: Playwright):
         # return current_season_dot_pos
 
 
-    weekday: str = await pred_day()
-    if weekday == '...':
+    weekday: int = int(await pred_day())
+    if str(weekday) == '...':
         print("Waiting for preditions...")
         await expect(realnaps_tab.locator('//span[@id="day"]')
                      ).not_to_contain_text('...', timeout=default_timeout)
         weekday: int = int(await pred_day())
 
-    sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {weekday}")]/following-sibling::*'
     print(f"Prediction displayed.")
     
-    # Continously playing games seasons by season
+    # SEASON GAMES
     while True:
         await select_team_slide()
 
+        # WEEK GAMES
         while True:
             # Get predicted team
-            await realnaps_tab.bring_to_front()
-            if int(weekday) != int(await pred_day()): continue
+            # await realnaps_tab.bring_to_front()
+            if weekday != int(await pred_day()): continue
             team: list = await get_team()
-            print(f"Day {weekday}: {team[0]} vs. {team[1]}")
+            print(f"Day {str(weekday)}: {team[0]} vs. {team[1]}")
+            sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {str(weekday)}")]/following-sibling::*'
             # await realnaps_tab.close()
 
             await sporty_tab.bring_to_front()
@@ -191,39 +192,29 @@ async def run(playwright: Playwright):
             while True:
                 try:  # Check for Open Bet 
                     await expect(iframe.locator( # Match still going on
-                        '//div[@class="status grid grid-center grid-middle open"]')
+                        '//div[@class="status grid grid-center grid-middle open"]').nth(0)
                         ).not_to_be_visible(timeout=5 * 1000) # Open Bet
                     try:  
                         await expect(iframe.locator(  # We won
-                            '//div[@class="status grid grid-center grid-middle paidout"]')
+                            '//div[@class="status grid grid-center grid-middle paidout"]').nth(0)
                             ).to_be_visible(timeout=5 * 1000)  # Paidout Bet
+                        print(f"Day {str(weekday)} won.")
+                        await iframe.locator('//span[@class="icon icon-clear"]').click()
                         stakeAmt = 100  # Return back to initial stake amount
                     except AssertionError:
+                        print(f"Day {str(weekday)} lost.")
+                        await iframe.locator('//span[@class="icon icon-clear"]').click()
                         stakeAmt *= 2  # Double the previous stake amount
                     finally:
                         break
                 except AssertionError: 
                     await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
-                    continue
+                    # continue
             weekday += 1
-            continue
-        continue
+        #     continue
+        # continue
 
-
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    # with open("sportybet_cookie.json", "w") as file:
-    #     file.write(await context.cookies("https://sportybet.com"))
-    
-    
+   
     input("Enter something here: ")
     await context.close()
 
