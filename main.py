@@ -190,36 +190,55 @@ async def run(playwright: Playwright):
             # Wait for bet history tickets to be visible
             await expect(iframe.locator(
                 '//div[contains(text(), "Ticket")]').nth(0)).to_be_visible(timeout=default_timeout)
+            await expect(iframe.locator(
+                '//div[@class="bet row valign-wrapper ng-star-inserted"]').nth(0)).to_be_visible(timeout=default_timeout)
             
             while True:
                 try:  # Check for Open Bet 
                     await expect(iframe.locator( # Match still going on
                         '//div[@class="status grid grid-center grid-middle open"]').nth(0)
                         ).not_to_be_visible(timeout=5 * 1000) # Open Bet
-                    try:  
-                        await expect(iframe.locator(  # We Won
-                            '//div[@class="status grid grid-center grid-middle paidout"]').nth(0)
-                            ).to_be_visible(timeout=5 * 1000)  # Paidout Bet
+                    latestBet = iframe.locator('//div[@class="bet row valign-wrapper ng-star-inserted"]').nth(0)
+                    # paidout = iframe.locator('//div[@class="status grid grid-center grid-middle paidout"]').nth(0)
+                    # lost = iframe.locator('//div[@class="status grid grid-center grid-middle lost"]').nth(0)
+                    lastestBet_paidout = latestBet.locator(
+                        '//div[@class="status grid grid-center grid-middle paidout"]')
+                    lastestBet_lost = latestBet.locator(
+                        '//div[@class="status grid grid-center grid-middle lost"]')
+                    await expect(lastestBet_paidout.or_(lastestBet_lost)).to_be_visible(timeout=5 * 1000)
+                    if (await lastestBet_paidout.is_visible()): #  and (await lastestBet_paidout.count() > 0)
                         print(f"Day {str(weekday)} won.")
                         stakeAmt = 100  # Return back to initial stake amount
-                    except AssertionError:
-                        # await expect(iframe.locator(  # We Lost
-                        #     '//div[@class="status grid grid-center grid-middle lost"]').nth(0)
-                        #     ).to_be_visible(timeout=5 * 1000)  # Lost Bet
+                    else:
                         print(f"Day {str(weekday)} lost.")
                         stakeAmt *= 2  # Double the previous stake amount
-                    finally:
-                        await iframe.locator('//span[@class="icon icon-clear"]').click()
-                        realnaps_tab = await context.new_page()
-                        await realnaps_tab.goto(
-                            "https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
-                        break
+                    await iframe.locator('//span[@class="icon icon-clear"]').click()
+                    realnaps_tab = await context.new_page()
+                    await realnaps_tab.goto(
+                        "https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
+                    break
+                    # try:  
+                    #     await expect(iframe.locator(  # We Won
+                    #         '//div[@class="status grid grid-center grid-middle paidout"]').nth(0)
+                    #         ).to_be_visible(timeout=5 * 1000)  # Paidout Bet
+                    #     print(f"Day {str(weekday)} won.")
+                    #     stakeAmt = 100  # Return back to initial stake amount
+                    # except AssertionError:
+                    #     # await expect(iframe.locator(  # We Lost
+                    #     #     '//div[@class="status grid grid-center grid-middle lost"]').nth(0)
+                    #     #     ).to_be_visible(timeout=5 * 1000)  # Lost Bet
+                    #     print(f"Day {str(weekday)} lost.")
+                    #     stakeAmt *= 2  # Double the previous stake amount
+                    # finally:
+                    #     await iframe.locator('//span[@class="icon icon-clear"]').click()
+                    #     realnaps_tab = await context.new_page()
+                    #     await realnaps_tab.goto(
+                    #         "https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
+                    #     break
                 except AssertionError: 
                     await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
                     await expect(iframe.locator(
                         "div.overlay__label")).not_to_be_visible(timeout=default_timeout)  # Wait for loading icon not to be visible 
-                    # await asyncio.sleep(3)
-                    # continue
             if weekday != 38: weekday += 1
             else: weekday = 1
         #     continue
