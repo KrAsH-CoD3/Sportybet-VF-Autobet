@@ -153,7 +153,7 @@ async def run(playwright: Playwright):
                 print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             # await realnaps_tab.close()
             
-            # odd: lists = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
+            odd: list = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
             await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
             await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
             await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
@@ -206,7 +206,7 @@ async def run(playwright: Playwright):
                     lastestBet_lost = latestBet.locator(
                         '//div[@class="status grid grid-center grid-middle lost"]')
                     await expect(lastestBet_paidout.or_(lastestBet_lost)).to_be_visible(timeout=5 * 1000)
-                    if (await lastestBet_paidout.is_visible()): #  and (await lastestBet_paidout.count() > 0)
+                    if (await lastestBet_paidout.count() > 0): #  and (await lastestBet_paidout.count() > 0)
                         print(f"Day {str(weekday)} won.")
                         stakeAmt = 100  # Return back to initial stake amount
                     else:
