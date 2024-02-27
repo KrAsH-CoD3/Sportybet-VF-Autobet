@@ -127,8 +127,11 @@ async def run(playwright: Playwright):
             # Get predicted team
             # await realnaps_tab.bring_to_front()
             if weekday != await pred_day(): continue
+            # print(f"{'-'*10}Week Day {weekday}{'-'*10}")
             team: list = await get_team()
-            match_info: str = f"Day {str(weekday)} || {team[0]} vs. {team[1]}"
+            await realnaps_tab.close()
+            match_info: str = f"{'-'*10}Week Day {str(weekday)}{'-'*10}\nTeam: {team[0]} vs. {team[1]}"
+            print(match_info)
             sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {str(weekday)}")]/following-sibling::*'
 
             await sporty_tab.bring_to_front()
@@ -137,42 +140,39 @@ async def run(playwright: Playwright):
             rem_time: timedelta = timedelta(hours=mthTimer.hour, minutes=mthTimer.minute, seconds=mthTimer.second) - timedelta(
                 hours=timeout.hour, minutes=timeout.minute, seconds=timeout.second)
             str_rem_time: str = str(rem_time)
-            if str_rem_time.split(":")[1] == "00":
-                print(f'Countdown time is {str_rem_time.split(":")[2]} seconds.')
-            else:
-                print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
-            
             odds: list = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
-            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
-            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
-            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
-            num1 = iframe.locator(numpad_xpath).nth(0)
-            num2 = iframe.locator(numpad_xpath).nth(1)
-            num3 = iframe.locator(numpad_xpath).nth(2)
-            num4 = iframe.locator(numpad_xpath).nth(3)
-            num5 = iframe.locator(numpad_xpath).nth(4)
-            num6 = iframe.locator(numpad_xpath).nth(5)
-            num7 = iframe.locator(numpad_xpath).nth(6)
-            num8 = iframe.locator(numpad_xpath).nth(7)
-            num9 = iframe.locator(numpad_xpath).nth(8)
-            num0 = iframe.locator(numpad_xpath).nth(9)
+            if str_rem_time.split(":")[1] == "00":
+                print(f'Weekday {str(weekday)} odd: {odds[0]}\nCountdown time is {str_rem_time.split(":")[2]} seconds.')
+            else:
+                print(f'Weekday {str(weekday)} odd: {odds[0]}\nCountdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
+            
+            # ## Select Odd and place bet
+            # await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
+            # await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
+            # await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
+            # num1 = iframe.locator(numpad_xpath).nth(0)
+            # num2 = iframe.locator(numpad_xpath).nth(1)
+            # num3 = iframe.locator(numpad_xpath).nth(2)
+            # num4 = iframe.locator(numpad_xpath).nth(3)
+            # num5 = iframe.locator(numpad_xpath).nth(4)
+            # num6 = iframe.locator(numpad_xpath).nth(5)
+            # num7 = iframe.locator(numpad_xpath).nth(6)
+            # num8 = iframe.locator(numpad_xpath).nth(7)
+            # num9 = iframe.locator(numpad_xpath).nth(8)
+            # num0 = iframe.locator(numpad_xpath).nth(9)
+            # num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
+            # # Type the initial stake amount by clicking the corresponding elements
+            # for digit in str(stakeAmt):
+            #     await num_dict[int(digit)].click()
+            # await place_bet()
 
-            num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
-            # Type the initial stake amount by clicking the corresponding elements
-            for digit in str(stakeAmt):
-                await num_dict[int(digit)].click()
-            await place_bet()
-
-            await realnaps_tab.close()
-
-            # Get result of previous match
-            await goto_vfPage()  # Refresh the page because of sportybet logout bug
-            print(f"{match_info} || {odds[0]}\nWaiting for match to begin...")
-            await expect(iframe.locator(
-                '//gr-header[@class="ng-star-inserted live-status-playing"]')).to_be_visible(timeout=default_timeout * 5)
+            # await goto_vfPage()  # Refresh the page because of sportybet logout bug
+            print(f"Waiting for match to begin...")
+            live_mth_red: bool = iframe.locator(
+                f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday}")]')
+            await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)
             print("Match started...")
-            await expect(iframe.locator(
-                '//gr-header[@class="ng-star-inserted live-status-playing"]')).not_to_be_visible(timeout=default_timeout * 4)
+            await expect(live_mth_red).not_to_be_visible(timeout=default_timeout * 4)
             print("Match ended. Checking result...")
             # Click bet history
             await iframe.locator('//span[@class="text-center ng-tns-c139-0 icon icon-ticket"]').click()
@@ -182,6 +182,7 @@ async def run(playwright: Playwright):
             await expect(iframe.locator(
                 '//div[@class="bet row valign-wrapper ng-star-inserted"]').nth(0)).to_be_visible(timeout=default_timeout)
             
+            # Get result of previous match
             while True:
                 try:  # Check for Open Bet 
                     await expect(iframe.locator( # Match still going on
@@ -194,10 +195,10 @@ async def run(playwright: Playwright):
                         '//div[@class="status grid grid-center grid-middle lost"]')
                     await expect(lastestBet_paidout.or_(lastestBet_lost)).to_be_visible(timeout=5 * 1000)
                     if (await lastestBet_paidout.count() > 0): #  and (await lastestBet_paidout.count() > 0)
-                        print(f"{'-'*20}Day {str(weekday)} won{'-'*20}")
+                        print(f"Day {str(weekday)} won")
                         stakeAmt = 100  # Return back to initial stake amount
                     else:
-                        print(f"{'-'*20}Day {str(weekday)} lost{'-'*20}")
+                        print(f"Day {str(weekday)} lost")
                         stakeAmt *= 2  # Double the previous stake amount
                     await iframe.locator('//span[@class="icon icon-clear"]').click()
                     realnaps_tab = await context.new_page()
@@ -211,7 +212,7 @@ async def run(playwright: Playwright):
             if weekday != 38: weekday += 1
             else: 
                 weekday = 1
-                print(f"\n{'-'*20}NEW SEASON BEGINS{'-'*20}")
+                print(f"\n{'-'*10}NEW SEASON BEGINS{'-'*10}")
 
     
 async def main():
