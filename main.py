@@ -128,7 +128,7 @@ async def run(playwright: Playwright):
             # await realnaps_tab.bring_to_front()
             if weekday != await pred_day(): continue
             team: list = await get_team()
-            print(f"Day {str(weekday)}: {team[0]} vs. {team[1]}")
+            match_info: str = f"Day {str(weekday)} || {team[0]} vs. {team[1]}"
             sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {str(weekday)}")]/following-sibling::*'
 
             await sporty_tab.bring_to_front()
@@ -142,7 +142,7 @@ async def run(playwright: Playwright):
             else:
                 print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             
-            odd: list = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
+            odds: list = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
             await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
             await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
             await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
@@ -167,7 +167,7 @@ async def run(playwright: Playwright):
 
             # Get result of previous match
             await goto_vfPage()  # Refresh the page because of sportybet logout bug
-            print("Waiting for match to begin...")
+            print(f"{match_info} || {odds[0]}\nWaiting for match to begin...")
             await expect(iframe.locator(
                 '//gr-header[@class="ng-star-inserted live-status-playing"]')).to_be_visible(timeout=default_timeout * 5)
             print("Match started...")
