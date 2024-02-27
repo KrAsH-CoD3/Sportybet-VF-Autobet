@@ -1,8 +1,6 @@
-import ast
-import asyncio, os
-import contextlib
 from random import randint
 from dotenv import load_dotenv
+import asyncio, os, contextlib, ast
 from os import environ as env_variable
 from datetime import datetime, timedelta
 from playwright._impl._errors import TimeoutError
@@ -27,13 +25,9 @@ async def run(playwright: Playwright):
         user_agent = 'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.57 Mobile Safari/537.36',
         viewport = {'width': 400, 'height': 590},
         device_scale_factor = 2.625,
-        # viewport = {'width': 412, 'height': 839}
-        # **device,
     )
 
     stakeAmt = 100
-    lost_matches: int = 1
-    won_prev_match: bool = True
     default_timeout: int = 30 * 1000
     
     sporty_tab = await context.new_page()
@@ -71,8 +65,6 @@ async def run(playwright: Playwright):
                 # Waits for loadig icon not to be visible 
                 await expect(sporty_tab.locator(
                     '//*[local-name()="svg" and @class="icon loading-icon"]')).not_to_be_visible(timeout=10 * 1000)
-                # Checks if balance is displayed or "Register | Login". Should be False at this point.
-                not_logged_in = await sporty_tab.locator('//span[@data-cms-key="log_in" and contains(text(), "Login")]').is_visible()
                 iframe = sporty_tab.frame_locator("iframe").nth(0)
                 await iframe.get_by_text('England League').nth(1).click()
                 await expect(iframe.locator('//div[@id="Over_Under_2_5-selector"]')).to_be_visible(timeout=default_timeout)
@@ -112,9 +104,9 @@ async def run(playwright: Playwright):
     async def place_bet(): 
         await iframe.locator(numpad_done_xpath).click()
         await iframe.locator('//div[contains(text(), "Place bet")]').click()
-        await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=10 * 1000)
+        await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=default_timeout)
         print("Sending Ticket.")
-        await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=10 * 1000)
+        await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=default_timeout)
         print("Ticket Sent, Bet Placed.")
     
     async def select_team_slide():
@@ -123,7 +115,6 @@ async def run(playwright: Playwright):
         team_slide = await dot_position(current_season_dot_pos) 
         await team_slide.click()
         print(f"We are working with team {current_season_dot_pos + 1} this season.")
-        # return current_season_dot_pos
 
     weekday = await pred_day()
     
@@ -139,7 +130,6 @@ async def run(playwright: Playwright):
             team: list = await get_team()
             print(f"Day {str(weekday)}: {team[0]} vs. {team[1]}")
             sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {str(weekday)}")]/following-sibling::*'
-            # await realnaps_tab.close()
 
             await sporty_tab.bring_to_front()
             mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
@@ -151,7 +141,6 @@ async def run(playwright: Playwright):
                 print(f'Countdown time is {str_rem_time.split(":")[2]} seconds.')
             else:
                 print(f'Countdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
-            # await realnaps_tab.close()
             
             odd: list = await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').all_inner_texts()
             await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
@@ -199,54 +188,30 @@ async def run(playwright: Playwright):
                         '//div[@class="status grid grid-center grid-middle open"]').nth(0)
                         ).not_to_be_visible(timeout=5 * 1000) # Open Bet
                     latestBet = iframe.locator('//div[@class="bet row valign-wrapper ng-star-inserted"]').nth(0)
-                    # paidout = iframe.locator('//div[@class="status grid grid-center grid-middle paidout"]').nth(0)
-                    # lost = iframe.locator('//div[@class="status grid grid-center grid-middle lost"]').nth(0)
                     lastestBet_paidout = latestBet.locator(
                         '//div[@class="status grid grid-center grid-middle paidout"]')
                     lastestBet_lost = latestBet.locator(
                         '//div[@class="status grid grid-center grid-middle lost"]')
                     await expect(lastestBet_paidout.or_(lastestBet_lost)).to_be_visible(timeout=5 * 1000)
                     if (await lastestBet_paidout.count() > 0): #  and (await lastestBet_paidout.count() > 0)
-                        print(f"Day {str(weekday)} won.")
+                        print(f"{'-'*20}Day {str(weekday)} won{'-'*20}")
                         stakeAmt = 100  # Return back to initial stake amount
                     else:
-                        print(f"Day {str(weekday)} lost.")
+                        print(f"{'-'*20}Day {str(weekday)} lost{'-'*20}")
                         stakeAmt *= 2  # Double the previous stake amount
                     await iframe.locator('//span[@class="icon icon-clear"]').click()
                     realnaps_tab = await context.new_page()
                     await realnaps_tab.goto(
                         "https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
                     break
-                    # try:  
-                    #     await expect(iframe.locator(  # We Won
-                    #         '//div[@class="status grid grid-center grid-middle paidout"]').nth(0)
-                    #         ).to_be_visible(timeout=5 * 1000)  # Paidout Bet
-                    #     print(f"Day {str(weekday)} won.")
-                    #     stakeAmt = 100  # Return back to initial stake amount
-                    # except AssertionError:
-                    #     # await expect(iframe.locator(  # We Lost
-                    #     #     '//div[@class="status grid grid-center grid-middle lost"]').nth(0)
-                    #     #     ).to_be_visible(timeout=5 * 1000)  # Lost Bet
-                    #     print(f"Day {str(weekday)} lost.")
-                    #     stakeAmt *= 2  # Double the previous stake amount
-                    # finally:
-                    #     await iframe.locator('//span[@class="icon icon-clear"]').click()
-                    #     realnaps_tab = await context.new_page()
-                    #     await realnaps_tab.goto(
-                    #         "https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
-                    #     break
                 except AssertionError: 
                     await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
                     await expect(iframe.locator(
                         "div.overlay__label")).not_to_be_visible(timeout=default_timeout)  # Wait for loading icon not to be visible 
             if weekday != 38: weekday += 1
-            else: weekday = 1
-        #     continue
-        # continue 
-
-   
-    input("Enter something here: ")
-    await context.close()
+            else: 
+                weekday = 1
+                print(f"\n{'-'*20}NEW SEASON BEGINS{'-'*20}")
 
     
 async def main():
