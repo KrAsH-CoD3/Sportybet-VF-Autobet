@@ -146,6 +146,18 @@ async def run(playwright: Playwright):
             else:
                 print(f'Weekday {str(weekday)} odd: {odds[0]}\nCountdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             
+            live_mth_red = iframe.locator(
+                f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday}")]')
+            live_nxtmth_red = iframe.locator(
+                f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday + 1}")]')
+            try:
+                await expect(live_mth_red.or_(live_nxtmth_red)).to_be_visible(timeout=0)
+                if await live_mth_red.is_visible(timeout=10 * 1000):
+                    print(f"Weekday {weekday} already began...")
+                    weekday += 1
+                    continue
+            except AssertionError: ...  # either of the xpaths were found which means the current match day is about to start
+
             # ## Select Odd and place bet
             # await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
             # await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
@@ -168,8 +180,15 @@ async def run(playwright: Playwright):
 
             # await goto_vfPage()  # Refresh the page because of sportybet logout bug
             print(f"Waiting for match to begin...")
-            live_mth_red: bool = iframe.locator(
-                f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday}")]')
+            # live_mth_red = iframe.locator(
+            #     f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday}")]')
+            # live_nxtmth_red = iframe.locator(
+            #     f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday + 1}")]')
+            # await expect(live_mth_red.or_(live_nxtmth_red)).to_be_visible(timeout=default_timeout * 5)
+            if await live_mth_red.is_visible(timeout=10 * 1000):
+                print(f"Weekday {weekday} already began...")
+                weekday += 1
+                continue
             await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)
             print("Match started...")
             await expect(live_mth_red).not_to_be_visible(timeout=default_timeout * 4)

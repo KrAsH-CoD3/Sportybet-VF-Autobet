@@ -14,6 +14,32 @@ Back button
 sporty x close 
 //span[@class="icon icon-clear"]
 
+live match won
+//*[@class="status-icon won"]
+
+live match won
+//*[@class="status-icon lost"]
+
+//span[@class="time-container__info ng-star-inserted" and contains(text(), "Finished")]
+
+live match row
+//div[@class="match ng-star-inserted"]
+
+Container for match timer/"Finished" 
+//div[@class="match ng-star-inserted"]//div[@class="row text-center valign-wrapper title-width ng-star-inserted"]
+
+Finished
+//div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//div[@class="col-xs-3 valign-middle select-container"]//span[@class="time-container__info ng-star-inserted"]
+
+each item
+//div[@class="col-xs-3 valign-middle select-container"]//div[@class="time-container__info ng-star-inserted"]
+
+Live match Team name
+//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "SHU")]
+//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "SHU")]/parent::
+
+Footer
+//div[@class="dynamic-footer-button"]
 
 Time out because math is already about to start or is playing already
   File "C:\Users\LmAo\Documents\AAA_Testing\Sportybet-VF-Autobet\main.py", line 145, in run
