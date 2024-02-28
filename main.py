@@ -129,13 +129,19 @@ async def run(playwright: Playwright):
             if weekday != await pred_day(): continue
             # print(f"{'-'*10}Week Day {weekday}{'-'*10}")
             team: list = await get_team()
-            await realnaps_tab.close()
             match_info: str = f"{'-'*10}Week Day {str(weekday)}{'-'*10}\nTeam: {team[0]} vs. {team[1]}"
             print(match_info)
             sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {str(weekday)}")]/following-sibling::*'
 
             await sporty_tab.bring_to_front()
-            mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
+            try: # FIRST CHECK: if live match is ongoing
+                sporty_tab.set_default_timeout(1000)
+                mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
+            except TimeoutError:
+                print(f"Oops missed the match. Live match already ongoing... Getting new match data")
+                weekday += 1
+                continue
+            finally: sporty_tab.set_default_timeout(default_timeout)
             timeout: datetime = datetime.strptime("00:00", "%M:%S").time()
             rem_time: timedelta = timedelta(hours=mthTimer.hour, minutes=mthTimer.minute, seconds=mthTimer.second) - timedelta(
                 hours=timeout.hour, minutes=timeout.minute, seconds=timeout.second)
@@ -146,17 +152,20 @@ async def run(playwright: Playwright):
             else:
                 print(f'Weekday {str(weekday)} odd: {odds[0]}\nCountdown time is {str_rem_time.split(":")[1]}:{str_rem_time.split(":")[2]}')
             
-            live_mth_red = iframe.locator(
-                f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday}")]')
-            live_nxtmth_red = iframe.locator(
-                f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday + 1}")]')
+            # Check if match isn't already began
             try:
-                await expect(live_mth_red.or_(live_nxtmth_red)).to_be_visible(timeout=0)
-                if await live_mth_red.is_visible(timeout=10 * 1000):
-                    print(f"Weekday {weekday} already began...")
-                    weekday += 1
+                sporty_tab.set_default_timeout(1000)
+                # SECOND CHECK: if live match has began before placing bet
+                # Get live match day immediately(no timeout) in live match bar
+                live_matchday: str = await iframe.locator('//gr-header[@class="ng-star-inserted live-status-playing"]//span[@class="text--uppercase"]').inner_text()
+                if live_matchday.split(' ')[1] != str(weekday): 
+                    print(f"Match {live_matchday} already began...")
+                    weekday = int(live_matchday.split(' ')[1]) + 1
                     continue
-            except AssertionError: ...  # either of the xpaths were found which means the current match day is about to start
+            except: ... # No live match ongoing
+            finally: sporty_tab.set_default_timeout(default_timeout)
+
+            await realnaps_tab.close()
 
             # ## Select Odd and place bet
             # await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
@@ -177,19 +186,19 @@ async def run(playwright: Playwright):
             # for digit in str(stakeAmt):
             #     await num_dict[int(digit)].click()
             # await place_bet()
-
             # await goto_vfPage()  # Refresh the page because of sportybet logout bug
+
             print(f"Waiting for match to begin...")
-            # live_mth_red = iframe.locator(
-            #     f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday}")]')
-            # live_nxtmth_red = iframe.locator(
-            #     f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "Week {weekday + 1}")]')
-            # await expect(live_mth_red.or_(live_nxtmth_red)).to_be_visible(timeout=default_timeout * 5)
-            if await live_mth_red.is_visible(timeout=10 * 1000):
-                print(f"Weekday {weekday} already began...")
-                weekday += 1
+            live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
+            await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)  # Checks here
+            live_matchday: str = await iframe.locator('//gr-header[@class="ng-star-inserted live-status-playing"]//span[@class="text--uppercase"]').inner_text()
+            # live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "{live_matchday}")]')
+            if live_matchday.split(' ')[1] != str(weekday): 
+                print('Wow, Match began already? Getting new match data')
+                weekday = int(live_matchday.split(' ')[1]) + 1
                 continue
-            await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)
+            # await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)
+
             print("Match started...")
             await expect(live_mth_red).not_to_be_visible(timeout=default_timeout * 4)
             print("Match ended. Checking result...")
