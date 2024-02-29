@@ -187,7 +187,6 @@ async def run(playwright: Playwright):
                 await num_dict[int(digit)].click()
 
             await place_bet()  # Place bet
-            await goto_vfPage()  # Refresh the page because of sportybet logout bug
 
             live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
             print(f"Waiting for match to begin...")
@@ -201,15 +200,15 @@ async def run(playwright: Playwright):
                     print(f"Day {str(weekday)} won")
                     stakeAmt = 100  # Return back to initial stake amount
                     break
-                except TimeoutError: 
+                except AssertionError: 
                     try: # "Finished" text 
                         await expect(iframe.locator(
                             f'//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "{team[0]}")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//span[@class="time-container__info ng-star-inserted" and contains(text(), "Finished")]')).to_be_visible(timeout=1000)
                         print(f"Day {str(weekday)} lost")
                         stakeAmt *= 2  # Double the previous stake amount
                         break
-                    except TimeoutError: ...
-            print("Match ended.")
+                    except AssertionError: ...
+            await goto_vfPage()  # Refresh the page because of sportybet logout bug
             realnaps_tab = await context.new_page()
             await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
             if weekday != 38: weekday += 1
