@@ -12,12 +12,8 @@ async def run(playwright: Playwright):
     current_working_dir: str = os.getcwd()
     user_data_path: str = os.path.join(current_working_dir, profile)
 
-    username, password = env_variable.get('username'), env_variable.get('password')
-    device: dict = dict(playwright.devices["Pixel 7"])
-    device: dict = {key: value for key, value in device.items() if key not in ('has_touch', 'is_mobile', 'default_browser_type')}
-
     context = await playwright['chromium'].launch_persistent_context(
-        args = ['--touch-events=enabled', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled'],
+        args = ['--touch-events=enabled', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled', '--incognito'],
         user_data_dir = user_data_path, 
         headless = False,
         color_scheme ='dark',
@@ -27,15 +23,14 @@ async def run(playwright: Playwright):
         device_scale_factor = 2.625,
     )
 
-    realnaps_tab = await context.new_page()
-    if len(context.pages) > 0: await context.pages[0].close()
+    realnaps_tab = context.pages[0]
+    if len(context.pages) > 1: await context.pages[0].close()
 
     default_timeout: int = 30 * 1000
     realnaps_tab.set_default_navigation_timeout(default_timeout)
     realnaps_tab.set_default_timeout(default_timeout)
     
     # Opens Realnaps
-    realnaps_tab = await context.new_page()
     await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
     
     async def get_team() -> list:
@@ -43,9 +38,9 @@ async def run(playwright: Playwright):
         awayteam: str = await realnaps_tab.inner_text('//div[@id="awayTxt" and @class="col"]')
         return [hometeam, awayteam] 
     
-    async def dot_position(position):
-        if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
-        return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
+    async def click_dot_position(position):
+        # if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
+        await realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]').click()
 
     async def pred_day() -> int: 
         weekday: str = await realnaps_tab.inner_text('//span[@id="day"]')
@@ -57,6 +52,31 @@ async def run(playwright: Playwright):
             return int(await realnaps_tab.inner_text('//span[@id="day"]'))
         return int(weekday)
     
+    while True:
+        for slideno in range(3):
+            # await realnaps_tab.locator('')
+            weekday: int = await pred_day()
+            if slideno == 0:
+                team1: list = await get_team()
+            elif slideno == 1:
+                await click_dot_position(slideno)
+                team2: list = await get_team()
+            elif slideno == 2: 
+                await click_dot_position(slideno)
+                team3: list = await get_team()
+                await click_dot_position(0)  # Go back to teamslide 1
+        print(f"Weekday {str(weekday)}\nTeam1: {team1[0]} vs {team1[1]}\nTeam2: {team2[0]} vs {team2[1]}\nTeam3: {team3[0]} vs {team3[1]}")
+        await realnaps_tab.get_by_role('button', name='Previous Predictions').click()
+        await expect(realnaps_tab.locator('//select[@id="season"]')).to_be_visible(timeout=default_timeout)
+
+
+
+
+        input("End of code: ")
+        break
+    
+    await context.close()
+
     
 async def main():
     async with async_playwright() as playwright:

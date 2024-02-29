@@ -21,24 +21,7 @@ live match won
 live match won
 //*[@class="status-icon lost"]
 
+realnaps stat close btn
+//div[@class="col-2 close-btn"]
 
-from live match team name to parent
-//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "SHU")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]
-
-from live match team name to parent to timer/finished text (CONTAINER)
-//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "SHU")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//div[@class="col-xs-3 valign-middle select-container"]
-
-from live match team name to parent to finished text
-//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "CHE")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//span[@class="time-container__info ng-star-inserted" and contains(text(), "Finished")]
-
-
-Footer => next week
-//div[@class="dynamic-footer-button"]
-
-
-
-Time out because math is already about to start or is playing already
-  File "C:\Users\LmAo\Documents\AAA_Testing\Sportybet-VF-Autobet\main.py", line 145, in run
-    mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
-                                           ^^^^^^^^^^^^^^^^^
 

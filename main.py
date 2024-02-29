@@ -11,10 +11,7 @@ async def run(playwright: Playwright):
     profile: str = "Sportybet-VF-profile"
     current_working_dir: str = os.getcwd()
     user_data_path: str = os.path.join(current_working_dir, profile)
-
     username, password = env_variable.get('username'), env_variable.get('password')
-    device: dict = dict(playwright.devices["Pixel 7"])
-    device: dict = {key: value for key, value in device.items() if key not in ('has_touch', 'is_mobile', 'default_browser_type')}
 
     context = await playwright['chromium'].launch_persistent_context(
         args = ['--touch-events=enabled', '--disable-dev-shm-usage', '--disable-blink-features=AutomationControlled'],
@@ -31,7 +28,7 @@ async def run(playwright: Playwright):
     default_timeout: int = 30 * 1000
     
     sporty_tab = await context.new_page()
-    if len(context.pages) > 0: await context.pages[0].close()
+    if len(context.pages) > 1: await context.pages[0].close()
 
     sporty_tab.set_default_navigation_timeout(default_timeout)
     sporty_tab.set_default_timeout(default_timeout)
