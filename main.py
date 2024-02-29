@@ -138,7 +138,7 @@ async def run(playwright: Playwright):
                 sporty_tab.set_default_timeout(1000)
                 mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
             except TimeoutError:
-                print(f"Oops missed the match. Live match already ongoing... Getting new match data")
+                print(f"Oops missed the match. Live match already ongoing.\nGetting new match data")
                 weekday += 1
                 continue
             finally: sporty_tab.set_default_timeout(default_timeout)
@@ -159,7 +159,7 @@ async def run(playwright: Playwright):
                 # Get live match day immediately(no timeout) in live match bar
                 live_matchday: str = await iframe.locator('//gr-header[@class="ng-star-inserted live-status-playing"]//span[@class="text--uppercase"]').inner_text()
                 if live_matchday.split(' ')[1] != str(weekday): 
-                    print(f"Match {live_matchday} already began...")
+                    print(f"Sorry, Match {live_matchday} already began.\nGetting new match data")
                     weekday = int(live_matchday.split(' ')[1]) + 1
                     continue
             except: ... # No live match ongoing
@@ -167,38 +167,30 @@ async def run(playwright: Playwright):
 
             await realnaps_tab.close()
 
-            # ## Select Odd and place bet
-            # await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
-            # await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
-            # await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
-            # num1 = iframe.locator(numpad_xpath).nth(0)
-            # num2 = iframe.locator(numpad_xpath).nth(1)
-            # num3 = iframe.locator(numpad_xpath).nth(2)
-            # num4 = iframe.locator(numpad_xpath).nth(3)
-            # num5 = iframe.locator(numpad_xpath).nth(4)
-            # num6 = iframe.locator(numpad_xpath).nth(5)
-            # num7 = iframe.locator(numpad_xpath).nth(6)
-            # num8 = iframe.locator(numpad_xpath).nth(7)
-            # num9 = iframe.locator(numpad_xpath).nth(8)
-            # num0 = iframe.locator(numpad_xpath).nth(9)
-            # num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
-            # # Type the initial stake amount by clicking the corresponding elements
-            # for digit in str(stakeAmt):
-            #     await num_dict[int(digit)].click()
-            # await place_bet()
-            # await goto_vfPage()  # Refresh the page because of sportybet logout bug
+            ## Select Odd and place bet
+            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
+            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
+            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
+            num1 = iframe.locator(numpad_xpath).nth(0)
+            num2 = iframe.locator(numpad_xpath).nth(1)
+            num3 = iframe.locator(numpad_xpath).nth(2)
+            num4 = iframe.locator(numpad_xpath).nth(3)
+            num5 = iframe.locator(numpad_xpath).nth(4)
+            num6 = iframe.locator(numpad_xpath).nth(5)
+            num7 = iframe.locator(numpad_xpath).nth(6)
+            num8 = iframe.locator(numpad_xpath).nth(7)
+            num9 = iframe.locator(numpad_xpath).nth(8)
+            num0 = iframe.locator(numpad_xpath).nth(9)
+            num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
+            # Type the initial stake amount by clicking the corresponding elements
+            for digit in str(stakeAmt):
+                await num_dict[int(digit)].click()
+            await place_bet()
+            await goto_vfPage()  # Refresh the page because of sportybet logout bug
 
-            print(f"Waiting for match to begin...")
             live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
+            print(f"Waiting for match to begin...")
             await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)  # Checks here
-            live_matchday: str = await iframe.locator('//gr-header[@class="ng-star-inserted live-status-playing"]//span[@class="text--uppercase"]').inner_text()
-            # live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]//*[contains(text(), "{live_matchday}")]')
-            if live_matchday.split(' ')[1] != str(weekday): 
-                print('Wow, Match began already? Getting new match data')
-                weekday = int(live_matchday.split(' ')[1]) + 1
-                continue
-            # await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)
-
             print("Match started...")
             await expect(live_mth_red).not_to_be_visible(timeout=default_timeout * 4)
             print("Match ended. Checking result...")
