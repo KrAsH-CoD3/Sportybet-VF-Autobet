@@ -211,8 +211,12 @@ async def run(playwright: Playwright):
             await goto_vfPage()  # Refresh the page because of sportybet logout bug
             realnaps_tab = await context.new_page()
             await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
-            if weekday != 38: weekday += 1
-            else: weekday = 1; print(f"\n{'-'*10}NEW SEASON BEGINS{'-'*10}")
+            if weekday != 33: weekday += 1
+            else: # STOP AT WEEKDAY 33 CUS OF LAW OF DIMINISING RETURN
+                weekday = 1
+                print(f"WEEK 33 MEANS END OF SEASON FOR US.\nWAITING FOR NEW SEASON TO BEGIN...")
+                await asyncio.sleep(60 * 15)
+                print(f"\n{'-'*10}NEW SEASON BEGINS{'-'*10}\nWAITING FOR NEW SEASON PREDICTIONS")
 
     
 async def main():
