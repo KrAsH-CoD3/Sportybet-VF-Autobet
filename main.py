@@ -185,54 +185,35 @@ async def run(playwright: Playwright):
             # Type the initial stake amount by clicking the corresponding elements
             for digit in str(stakeAmt):
                 await num_dict[int(digit)].click()
-            await place_bet()
+
+            await place_bet()  # Place bet
             await goto_vfPage()  # Refresh the page because of sportybet logout bug
 
             live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
             print(f"Waiting for match to begin...")
             await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)  # Checks here
             print("Match started...")
-            await expect(live_mth_red).not_to_be_visible(timeout=default_timeout * 4)
-            print("Match ended. Checking result...")
-            # Click bet history
-            await iframe.locator('//span[@class="text-center ng-tns-c139-0 icon icon-ticket"]').click()
-            # Wait for bet history tickets to be visible
-            await expect(iframe.locator(
-                '//div[contains(text(), "Ticket")]').nth(0)).to_be_visible(timeout=default_timeout)
-            await expect(iframe.locator(
-                '//div[@class="bet row valign-wrapper ng-star-inserted"]').nth(0)).to_be_visible(timeout=default_timeout)
-            
-            # Get result of previous match
+            await live_mth_red.click()
+            await asyncio.sleep(7)
             while True:
-                try:  # Check for Open Bet 
-                    await expect(iframe.locator( # Match still going on
-                        '//div[@class="status grid grid-center grid-middle open"]').nth(0)
-                        ).not_to_be_visible(timeout=5 * 1000) # Open Bet
-                    latestBet = iframe.locator('//div[@class="bet row valign-wrapper ng-star-inserted"]').nth(0)
-                    lastestBet_paidout = latestBet.locator(
-                        '//div[@class="status grid grid-center grid-middle paidout"]')
-                    lastestBet_lost = latestBet.locator(
-                        '//div[@class="status grid grid-center grid-middle lost"]')
-                    await expect(lastestBet_paidout.or_(lastestBet_lost)).to_be_visible(timeout=5 * 1000)
-                    if (await lastestBet_paidout.count() > 0): #  and (await lastestBet_paidout.count() > 0)
-                        print(f"Day {str(weekday)} won")
-                        stakeAmt = 100  # Return back to initial stake amount
-                    else:
+                try:
+                    await expect(iframe.locator('//*[@class="status-icon won"]')).to_be_visible(timeout=1000)
+                    print(f"Day {str(weekday)} won")
+                    stakeAmt = 100  # Return back to initial stake amount
+                    break
+                except TimeoutError: 
+                    try: # "Finished" text 
+                        await expect(iframe.locator(
+                            f'//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "{team[0]}")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//span[@class="time-container__info ng-star-inserted" and contains(text(), "Finished")]')).to_be_visible(timeout=1000)
                         print(f"Day {str(weekday)} lost")
                         stakeAmt *= 2  # Double the previous stake amount
-                    await iframe.locator('//span[@class="icon icon-clear"]').click()
-                    realnaps_tab = await context.new_page()
-                    await realnaps_tab.goto(
-                        "https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
-                    break
-                except AssertionError: 
-                    await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
-                    await expect(iframe.locator(
-                        "div.overlay__label")).not_to_be_visible(timeout=default_timeout)  # Wait for loading icon not to be visible 
+                        break
+                    except TimeoutError: ...
+            print("Match ended.")
+            realnaps_tab = await context.new_page()
+            await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
             if weekday != 38: weekday += 1
-            else: 
-                weekday = 1
-                print(f"\n{'-'*10}NEW SEASON BEGINS{'-'*10}")
+            else: weekday = 1; print(f"\n{'-'*10}NEW SEASON BEGINS{'-'*10}")
 
     
 async def main():
