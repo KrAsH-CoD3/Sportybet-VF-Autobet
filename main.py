@@ -102,7 +102,7 @@ async def run(playwright: Playwright):
         await iframe.locator(numpad_done_xpath).click()
         await iframe.locator('//div[contains(text(), "Place bet")]').click()
         await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=default_timeout)
-        print(f"Sending Ticket | ")
+        print(f"Sending Ticket | {stakeAmt}")
         await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=default_timeout)
         print("Ticket Sent, Bet Placed.")
     
