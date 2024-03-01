@@ -164,27 +164,27 @@ async def run(playwright: Playwright):
 
             await realnaps_tab.close()
 
-            # ## Select Odd and place bet
-            # await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
-            # await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
-            # await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
-            # num1 = iframe.locator(numpad_xpath).nth(0)
-            # num2 = iframe.locator(numpad_xpath).nth(1)
-            # num3 = iframe.locator(numpad_xpath).nth(2)
-            # num4 = iframe.locator(numpad_xpath).nth(3)
-            # num5 = iframe.locator(numpad_xpath).nth(4)
-            # num6 = iframe.locator(numpad_xpath).nth(5)
-            # num7 = iframe.locator(numpad_xpath).nth(6)
-            # num8 = iframe.locator(numpad_xpath).nth(7)
-            # num9 = iframe.locator(numpad_xpath).nth(8)
-            # num0 = iframe.locator(numpad_xpath).nth(9)
-            # num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
-            # # Type the initial stake amount by clicking the corresponding elements
-            # for digit in str(stakeAmt):
-            #     await num_dict[int(digit)].click()
+            ## Select Odd and place bet
+            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
+            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
+            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
+            num1 = iframe.locator(numpad_xpath).nth(0)
+            num2 = iframe.locator(numpad_xpath).nth(1)
+            num3 = iframe.locator(numpad_xpath).nth(2)
+            num4 = iframe.locator(numpad_xpath).nth(3)
+            num5 = iframe.locator(numpad_xpath).nth(4)
+            num6 = iframe.locator(numpad_xpath).nth(5)
+            num7 = iframe.locator(numpad_xpath).nth(6)
+            num8 = iframe.locator(numpad_xpath).nth(7)
+            num9 = iframe.locator(numpad_xpath).nth(8)
+            num0 = iframe.locator(numpad_xpath).nth(9)
+            num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
+            # Type the initial stake amount by clicking the corresponding elements
+            for digit in str(stakeAmt):
+                await num_dict[int(digit)].click()
 
             await place_bet()  # Place bet
-            await iframe.locator(sportybet_mth_cntdown_xpath).scroll_into_view_if_needed()
+            await iframe.locator('//div[@id="Over_Under_2_5-selector"]').scroll_into_view_if_needed()
 
             live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
             print(f"Waiting for match to begin...")
