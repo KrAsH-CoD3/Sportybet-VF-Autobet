@@ -36,6 +36,8 @@ async def run(playwright: Playwright):
     numpad_done_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__done"]'
     rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
     numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
+    unexp_err_msg_xpath: str = '//div[contains(text(), "An unexpected error occurred. Please, try later")]'
+    live_mth_red_week: str = '//gr-header[@class="ng-star-inserted live-status-playing"]//span[@class="text--uppercase"]'
     
     # Login into Sportybet using Cookie 
     my_cookie: list = ast.literal_eval(env_variable.get('my_cookie'))  # Convert string literal to list
@@ -84,6 +86,9 @@ async def run(playwright: Playwright):
         if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
         return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
 
+    async def check_unexp_err_msg() -> bool :
+        return  await iframe.locator(unexp_err_msg_xpath).is_visible()
+
     async def mth_timer() -> str: 
         timer: str = await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
         return timer[1:]
@@ -125,12 +130,16 @@ async def run(playwright: Playwright):
             # await realnaps_tab.bring_to_front()
             if weekday != await pred_day(): continue
             # if
+            # //football-block-results[@class="ng-star-inserted"] # parent(holder)
+            # //div[@class="grid grid-middle title-center ng-star-inserted"] # children
             team: list = await get_team()
             match_info: str = f"{'-'*10}Week Day {str(weekday)}{'-'*10}\nTeam: {team[0]} vs. {team[1]}"
             print(match_info)
+            #  Match timer for specific week day xpath
             sportybet_mth_cntdown_xpath: str = f'//span[@class="text--uppercase" and contains(text(), "Week {str(weekday)}")]/following-sibling::*'
 
             await sporty_tab.bring_to_front()
+
             try: # FIRST CHECK: if live match is ongoing
                 sporty_tab.set_default_timeout(1000)
                 mthTimer: datetime = datetime.strptime(await mth_timer(), "%M:%S").time()
@@ -154,7 +163,7 @@ async def run(playwright: Playwright):
                 sporty_tab.set_default_timeout(1000)
                 # SECOND CHECK: if live match has began before placing bet
                 # Get live match day immediately(no timeout) in live match bar
-                live_matchday: str = await iframe.locator('//gr-header[@class="ng-star-inserted live-status-playing"]//span[@class="text--uppercase"]').inner_text()
+                live_matchday: str = await iframe.locator(live_mth_red_week).inner_text()
                 if live_matchday.split(' ')[1] != str(weekday): 
                     print(f"Sorry, Match {live_matchday} already began.\nGetting new match data")
                     weekday = int(live_matchday.split(' ')[1]) + 1
