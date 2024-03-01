@@ -24,14 +24,12 @@ async def run(playwright: Playwright):
     )
 
     realnaps_tab = context.pages[0]
-    if len(context.pages) > 1: await context.pages[0].close()
-
     default_timeout: int = 30 * 1000
     realnaps_tab.set_default_navigation_timeout(default_timeout)
     realnaps_tab.set_default_timeout(default_timeout)
     
     # Opens Realnaps
-    await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
+    await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php", wait_until="commit")
     
     async def get_team() -> list:
         hometeam: str = await realnaps_tab.inner_text('//div[@id="homeTxt" and @class="col"]')
@@ -39,7 +37,6 @@ async def run(playwright: Playwright):
         return [hometeam, awayteam] 
     
     async def click_dot_position(position):
-        # if position == 0: return realnaps_tab.locator(f'//a[@class="swift bg-dark" and @name="{position}"]')
         await realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]').click()
 
     async def pred_day() -> int: 
@@ -67,8 +64,16 @@ async def run(playwright: Playwright):
                 await click_dot_position(0)  # Go back to teamslide 1
         print(f"Weekday {str(weekday)}\nTeam1: {team1[0]} vs {team1[1]}\nTeam2: {team2[0]} vs {team2[1]}\nTeam3: {team3[0]} vs {team3[1]}")
         await realnaps_tab.get_by_role('button', name='Previous Predictions').click()
-        await expect(realnaps_tab.locator('//select[@id="season"]')).to_be_visible(timeout=default_timeout)
-
+        # await expect(realnaps_tab.locator('//div[@id="prevHolder"]//table').nth(0)).to_be_visible(timeout=default_timeout)
+        await realnaps_tab.locator('//select[@id="season"]').select_option(label="Current Season")
+        await realnaps_tab.locator('//select[@id="pick"]').select_option(label="Over 2.5")
+        await expect(realnaps_tab.locator('//div[@id="prevHolder"]//table').nth(0)).to_be_visible(timeout=default_timeout)
+        # print(await realnaps_tab.locator(f'//td[contains(text(), "week * {str(weekday - 1)}")]').first.inner_text())
+        for i in range(3):
+            print(await realnaps_tab.locator(
+                f'//td[contains(text(), "week * {str(weekday - 1)}")]//parent::tr').nth(i).inner_text())
+            # print('-'*20)
+        # await asyncio.sleep()
 
 
 
