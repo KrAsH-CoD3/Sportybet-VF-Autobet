@@ -85,8 +85,8 @@ async def run(playwright: Playwright):
         return realnaps_tab.locator(f'//a[@class="swift" and @name="{position}"]')
 
     async def mth_timer() -> str: 
-        timer = await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
-        return str(timer)[1:]
+        timer: str = await iframe.locator(sportybet_mth_cntdown_xpath).inner_text()
+        return timer[1:]
     
     async def pred_day() -> int: 
         weekday: str = await realnaps_tab.inner_text('//span[@id="day"]')
@@ -102,7 +102,7 @@ async def run(playwright: Playwright):
         await iframe.locator(numpad_done_xpath).click()
         await iframe.locator('//div[contains(text(), "Place bet")]').click()
         await expect(iframe.locator('//span[contains(text(), "Sending Ticket")]')).to_be_visible(timeout=default_timeout)
-        print("Sending Ticket.")
+        print(f"Sending Ticket | ")
         await expect(iframe.locator('//span[contains(text(), "Ticket Sent")]')).to_be_visible(timeout=default_timeout)
         print("Ticket Sent, Bet Placed.")
     
@@ -164,26 +164,27 @@ async def run(playwright: Playwright):
 
             await realnaps_tab.close()
 
-            ## Select Odd and place bet
-            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
-            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
-            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
-            num1 = iframe.locator(numpad_xpath).nth(0)
-            num2 = iframe.locator(numpad_xpath).nth(1)
-            num3 = iframe.locator(numpad_xpath).nth(2)
-            num4 = iframe.locator(numpad_xpath).nth(3)
-            num5 = iframe.locator(numpad_xpath).nth(4)
-            num6 = iframe.locator(numpad_xpath).nth(5)
-            num7 = iframe.locator(numpad_xpath).nth(6)
-            num8 = iframe.locator(numpad_xpath).nth(7)
-            num9 = iframe.locator(numpad_xpath).nth(8)
-            num0 = iframe.locator(numpad_xpath).nth(9)
-            num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
-            # Type the initial stake amount by clicking the corresponding elements
-            for digit in str(stakeAmt):
-                await num_dict[int(digit)].click()
+            # ## Select Odd and place bet
+            # await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
+            # await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
+            # await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
+            # num1 = iframe.locator(numpad_xpath).nth(0)
+            # num2 = iframe.locator(numpad_xpath).nth(1)
+            # num3 = iframe.locator(numpad_xpath).nth(2)
+            # num4 = iframe.locator(numpad_xpath).nth(3)
+            # num5 = iframe.locator(numpad_xpath).nth(4)
+            # num6 = iframe.locator(numpad_xpath).nth(5)
+            # num7 = iframe.locator(numpad_xpath).nth(6)
+            # num8 = iframe.locator(numpad_xpath).nth(7)
+            # num9 = iframe.locator(numpad_xpath).nth(8)
+            # num0 = iframe.locator(numpad_xpath).nth(9)
+            # num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
+            # # Type the initial stake amount by clicking the corresponding elements
+            # for digit in str(stakeAmt):
+            #     await num_dict[int(digit)].click()
 
             await place_bet()  # Place bet
+            await iframe.locator(sportybet_mth_cntdown_xpath).scroll_into_view_if_needed()
 
             live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
             print(f"Waiting for match to begin...")

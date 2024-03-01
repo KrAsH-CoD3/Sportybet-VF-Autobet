@@ -11,15 +11,13 @@ Back button
 //span[@id="back-button"]
 
 ------------------------------------------------------------------------
+30 * 1000 = 30_000  # 30 secs
+30000 * 6 = 180_000 # 3 mins
+180000 * 5 = 900000 # 3 min * 5 = 15 mins (FOR END OF SEASON)
+------------------------------------------------------------------------
 
 sporty x close 
 //span[@class="icon icon-clear"]
-
-live match won
-//*[@class="status-icon won"]
-
-live match won
-//*[@class="status-icon lost"]
 
 realnaps stat close btn
 //div[@class="col-2 close-btn"]
