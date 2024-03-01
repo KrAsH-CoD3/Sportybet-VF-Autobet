@@ -24,7 +24,7 @@ async def run(playwright: Playwright):
         device_scale_factor = 2.625,
     )
 
-    stakeAmt = 100
+    stakeAmt = 200
     default_timeout: int = 30 * 1000
     
     sporty_tab = await context.new_page()
@@ -73,7 +73,7 @@ async def run(playwright: Playwright):
     
     # Opens Realnaps
     realnaps_tab = await context.new_page()
-    await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
+    await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php", wait_until="commit")
     
     async def get_team() -> list:
         hometeam: str = await realnaps_tab.inner_text('//div[@id="homeTxt" and @class="col"]')
@@ -124,7 +124,7 @@ async def run(playwright: Playwright):
             # Get predicted team
             # await realnaps_tab.bring_to_front()
             if weekday != await pred_day(): continue
-            # print(f"{'-'*10}Week Day {weekday}{'-'*10}")
+            # if
             team: list = await get_team()
             match_info: str = f"{'-'*10}Week Day {str(weekday)}{'-'*10}\nTeam: {team[0]} vs. {team[1]}"
             print(match_info)
@@ -187,27 +187,27 @@ async def run(playwright: Playwright):
 
             live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
             print(f"Waiting for match to begin...")
-            await expect(live_mth_red).to_be_visible(timeout=default_timeout * 5)  # Checks here
+            await expect(live_mth_red).to_be_visible(timeout=default_timeout * 6)  # Checks here | TIMEOUT= 3mins max
             print("Match started...")
             await live_mth_red.click()
             await asyncio.sleep(7)
             while True:
                 try:
                     await expect(iframe.locator('//*[@class="status-icon won"]')).to_be_visible(timeout=1000)
-                    print(f"Day {str(weekday)} won")
-                    stakeAmt = 100  # Return back to initial stake amount
+                    print(f"Day {str(weekday)} WON")
+                    stakeAmt = 200  # Return back to initial stake amount
                     break
                 except AssertionError: 
                     try: # "Finished" text 
                         await expect(iframe.locator(
                             f'//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "{team[0]}")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//span[@class="time-container__info ng-star-inserted" and contains(text(), "Finished")]')).to_be_visible(timeout=1000)
-                        print(f"Day {str(weekday)} lost")
+                        print(f"Day {str(weekday)} LOST")
                         stakeAmt *= 2  # Double the previous stake amount
                         break
                     except AssertionError: ...
             await goto_vfPage()  # Refresh the page because of sportybet logout bug
             realnaps_tab = await context.new_page()
-            await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php")
+            await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php", wait_until="commit")
             if weekday != 33: weekday += 1
             else: # STOP AT WEEKDAY 33 CUS OF LAW OF DIMINISING RETURN
                 weekday = 1
