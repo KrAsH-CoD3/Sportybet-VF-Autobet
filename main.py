@@ -33,11 +33,13 @@ async def run(playwright: Playwright):
     sporty_tab.set_default_navigation_timeout(default_timeout)
     sporty_tab.set_default_timeout(default_timeout)
 
+    all_live_mth_res_xpath: str = '//football-block-results[@class="ng-star-inserted"]'
     numpad_done_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__done"]'
     rem_odds_xpath: str = "/../../../../following-sibling::div//over-under-market//odd-box//span"
     numpad_xpath: str = '//div[@class="col grid grid-middle grid-center keypad__number ng-star-inserted"]'
     unexp_err_msg_xpath: str = '//div[contains(text(), "An unexpected error occurred. Please, try later")]'
     live_mth_red_week: str = '//gr-header[@class="ng-star-inserted live-status-playing"]//span[@class="text--uppercase"]'
+    bet_history_list_xpath: str = '//div[@class="bet row valign-wrapper ng-star-inserted"]//div[@class="col-xs-3 col-sm-1 ticket-time"]'
     
     # Login into Sportybet using Cookie 
     my_cookie: list = ast.literal_eval(env_variable.get('my_cookie'))  # Convert string literal to list
@@ -130,8 +132,6 @@ async def run(playwright: Playwright):
             # await realnaps_tab.bring_to_front()
             if weekday != await pred_day(): continue
             # if
-            # //football-block-results[@class="ng-star-inserted"] # parent(holder)
-            # //div[@class="grid grid-middle title-center ng-star-inserted"] # children
             team: list = await get_team()
             match_info: str = f"{'-'*10}Week Day {str(weekday)}{'-'*10}\nTeam: {team[0]} vs. {team[1]}"
             print(match_info)
@@ -173,28 +173,41 @@ async def run(playwright: Playwright):
 
             await realnaps_tab.close()
 
-            ## Select Odd and place bet
-            await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
-            await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
-            await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
-            num1 = iframe.locator(numpad_xpath).nth(0)
-            num2 = iframe.locator(numpad_xpath).nth(1)
-            num3 = iframe.locator(numpad_xpath).nth(2)
-            num4 = iframe.locator(numpad_xpath).nth(3)
-            num5 = iframe.locator(numpad_xpath).nth(4)
-            num6 = iframe.locator(numpad_xpath).nth(5)
-            num7 = iframe.locator(numpad_xpath).nth(6)
-            num8 = iframe.locator(numpad_xpath).nth(7)
-            num9 = iframe.locator(numpad_xpath).nth(8)
-            num0 = iframe.locator(numpad_xpath).nth(9)
-            num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
-            # Type the initial stake amount by clicking the corresponding elements
-            for digit in str(stakeAmt):
-                await num_dict[int(digit)].click()
+            # ## Select Odd and place bet
+            # await iframe.locator(f'//div[contains(text(), "{team[0]}")]{rem_odds_xpath}').nth(0).click()
+            # await iframe.locator('//dynamic-footer-quick-bet[@id="quick-bet-button"]').click()
+            # await iframe.locator('//input[@class="col col-4 system-bet system-bet__stake"]').click()
+            # num1 = iframe.locator(numpad_xpath).nth(0)
+            # num2 = iframe.locator(numpad_xpath).nth(1)
+            # num3 = iframe.locator(numpad_xpath).nth(2)
+            # num4 = iframe.locator(numpad_xpath).nth(3)
+            # num5 = iframe.locator(numpad_xpath).nth(4)
+            # num6 = iframe.locator(numpad_xpath).nth(5)
+            # num7 = iframe.locator(numpad_xpath).nth(6)
+            # num8 = iframe.locator(numpad_xpath).nth(7)
+            # num9 = iframe.locator(numpad_xpath).nth(8)
+            # num0 = iframe.locator(numpad_xpath).nth(9)
+            # num_dict = {1: num1, 2: num2, 3: num3, 4: num4, 5: num5, 6: num6, 7: num7, 8: num8, 9: num9, 0: num0}
+            # # Type the initial stake amount by clicking the corresponding elements
+            # for digit in str(stakeAmt):
+            #     await num_dict[int(digit)].click()
 
-            await place_bet()  # Place bet
+            # await place_bet()  # Place bet
             await iframe.locator('//div[@id="Over_Under_2_5-selector"]').scroll_into_view_if_needed()
+            
+            # Get bet time, Click bet history
+            await iframe.locator('//span[@class="text-center ng-tns-c139-0 icon icon-ticket"]').click()
+            # Wait for bet history tickets to be visible
+            await expect(iframe.locator(
+                '//div[contains(text(), "Ticket")]').nth(0)).to_be_visible(timeout=default_timeout)
+            time_bet_placed: str = await iframe.locator(bet_history_list_xpath).first.inner_text()
+            print(f"Bet placed time: {time_bet_placed}")
+            await iframe.locator('//span[@class="icon icon-clear"]').click() # X close from bet history
 
+            betslip_open_xpath: str = f'//div[contains(text(), "{time_bet_placed}")]/../../..//div[@class="status grid grid-center grid-middle open"]'
+            # betslip_won_xpath: str = f'//div[contains(text(), "{time_bet_placed}")]/../../..//div[@class="status grid grid-center grid-middle paidout"]'
+            betslip_lost_xpath: str = f'//div[contains(text(), "{time_bet_placed}")]/../../..//div[@class="status grid grid-center grid-middle lost"]'
+        
             live_mth_red = iframe.locator(f'//gr-header[@class="ng-star-inserted live-status-playing"]') # Does not check here
             print(f"Waiting for match to begin...")
             await expect(live_mth_red).to_be_visible(timeout=default_timeout * 6)  # Checks here | TIMEOUT= 3mins max
@@ -202,19 +215,48 @@ async def run(playwright: Playwright):
             await live_mth_red.click()
             await asyncio.sleep(7)
             while True:
-                try:
-                    await expect(iframe.locator('//*[@class="status-icon won"]')).to_be_visible(timeout=1000)
-                    print(f"Day {str(weekday)} WON")
-                    stakeAmt = 200  # Return back to initial stake amount
-                    break
-                except AssertionError: 
-                    try: # "Finished" text 
-                        await expect(iframe.locator(
-                            f'//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "{team[0]}")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//span[@class="time-container__info ng-star-inserted" and contains(text(), "Finished")]')).to_be_visible(timeout=1000)
-                        print(f"Day {str(weekday)} LOST")
-                        stakeAmt *= 2  # Double the previous stake amount
+
+                show_all_live_mth_res: bool = await iframe.locator(all_live_mth_res_xpath).is_visible()
+                if show_all_live_mth_res:
+                    print("Oops! All live matches result displayed.")
+                    # Click bet history
+                    await iframe.locator('//span[@class="text-center ng-tns-c139-0 icon icon-ticket"]').click()
+                    # Wait for bet history tickets to be visible
+                    await expect(iframe.locator(
+                        '//div[contains(text(), "Ticket")]').nth(0)).to_be_visible(timeout=default_timeout)
+                    
+                    while True:
+                        try:  # Check for Open Bet 
+                            Bet_open = iframe.locator(betslip_open_xpath)
+                            Bet_lost = iframe.locator(betslip_lost_xpath)
+                            await expect(Bet_open).not_to_be_visible(timeout=5 * 1000)
+                            try:
+                                await expect(Bet_lost).to_be_visible(timeout=1 * 1000)
+                                print(f"Day {str(weekday)} LOST")
+                                stakeAmt *= 2  # Double the previous stake amount
+                            except AssertionError:
+                                print(f"Day {str(weekday)} WON")
+                                stakeAmt = 200  # Return back to initial stake amount
+                                await iframe.locator('//span[@class="icon icon-clear"]').click()
+                                break
+                        except AssertionError: 
+                            await iframe.locator('//span[@class="icon icon-reload icon-1_8x"]').click()  # Refresh bet history
+                            await expect(iframe.locator(
+                                "div.overlay__label")).not_to_be_visible(timeout=default_timeout)  # Wait for loading icon not to be visible
+                else:   
+                    try:
+                        await expect(iframe.locator('//*[@class="status-icon won"]')).to_be_visible(timeout=1000)
+                        print(f"Day {str(weekday)} WON")
+                        stakeAmt = 200  # Return back to initial stake amount
                         break
-                    except AssertionError: ...
+                    except AssertionError: 
+                        try: # "Finished" text 
+                            await expect(iframe.locator(
+                                f'//div[@class="col-xs-2 valign-middle team-container ellipsis" and contains(text(), "{team[0]}")]/ancestor::div[@class="row text-center valign-wrapper title-width ng-star-inserted"]//span[@class="time-container__info ng-star-inserted" and contains(text(), "Finished")]')).to_be_visible(timeout=1000)
+                            print(f"Day {str(weekday)} LOST")
+                            stakeAmt *= 2  # Double the previous stake amount
+                            break
+                        except AssertionError: ...
             await goto_vfPage()  # Refresh the page because of sportybet logout bug
             realnaps_tab = await context.new_page()
             await realnaps_tab.goto("https://realnaps.com/signal/premium/ultra/sportybet-england-league.php", wait_until="commit")
