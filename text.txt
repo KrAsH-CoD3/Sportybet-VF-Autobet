@@ -22,4 +22,58 @@ sporty x close
 realnaps stat close btn
 //div[@class="col-2 close-btn"]
 
+------------------------------------------------------------------------
+SPORTYBET ISSUES
+1.
+----------Week Day 29----------
+Team: NEW vs. LIV
+Weekday 29 odd: 1.85
+Countdown time is 02:10
+Sorry, Match WEEK 28   already began.
+Getting new match data
+
+2.
+Timeout for Ticket sent not visible
+
+3.
+check within week 30 -33 if there are any win
+
+4.
+Always check for reg/login
+
+5.
+does not get live match result(Jumps to all live match result)
+
+6.
+checks if the last match was a win or a loss
+
+7.
+unexpected error message
+
+8.
+# Because it was stuck at vf page screen already logged out
+AssertionError: Locator expected to be visible
+Actual value: None
+Call log:
+LocatorAssertions.to_be_visible with timeout 180000ms
+  - waiting for frame_locator("iframe").first.locator("//gr-header[@class=\"ng-star-inserted live-status-playing\"]")
+
+9.
+----------NEW SEASON BEGINS----------
+WAITING FOR NEW SEASON PREDICTIONS
+----------Week Day 1----------
+Team: MCI vs. BOU
+Weekday 1 odd: 1.56
+Countdown time is 01:27
+Sorry, Match WEEK 38   already began.
+Getting new match data
+
+
+
+
+
+
+
+
+
 
